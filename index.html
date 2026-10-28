@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maaş Programı v1</title>
+<style>
+:root {
+  --primary: #1F4E79;
+  --secondary: #C65911;
+  --bg: #f0f2f5;
+  --card: #ffffff;
+  --input: #fffbf0;
+  --formula: #e8f5e9;
+  --border: #e0e0e0;
+  --text: #2c3e50;
+  --hover: #f8f9fa;
+}
+* { box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, #f0f2f5 0%, #e8eef5 100%);
+  margin: 0;
+  padding: 16px;
+  color: var(--text);
+  min-height: 100vh;
+}
+.header {
+  background: linear-gradient(135deg, var(--primary) 0%, #2a6cb0 100%);
+  color: white;
+  padding: 24px 32px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(31,78,121,0.15);
+}
+.header h1 { margin: 0; font-size: 26px; font-weight: 700; }
+.header p { margin: 6px 0 0; opacity: 0.9; font-size: 14px; }
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  align-items: center;
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+select, input, button {
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(31,78,121,0.2);
+}
+button:hover { background: #163a5f; transform: translateY(-1px); }
+button.secondary { background: var(--secondary); box-shadow: 0 2px 8px rgba(198,89,17,0.2); }
+button.secondary:hover { background: #a84a0e; }
+button.danger { background: #e74c3c; }
+button.danger:hover { background: #c0392b; }
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+th {
+  background: var(--primary);
+  color: white;
+  padding: 14px 8px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  font-weight: 600;
+}
+td {
+  padding: 10px 6px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+  transition: background 0.15s;
+}
+tr:hover td { background: var(--hover); }
+td.name { text-align: left; font-weight: 500; min-width: 150px; max-width: 180px; }
+td.name input { font-size: 12px; width: 100%; }
+input[type="number"], input[type="text"] {
+  width: 100%;
+  border: 1px solid #ddd;
+  padding: 8px;
+  border-radius: 6px;
+  background: var(--input);
+  text-align: center;
+  font-size: 12px;
+}
+input.formula {
+  background: var(--formula);
+  border: none;
+  font-weight: 600;
+  color: #1a5f2a;
+}
+.totals {
+  background: #1F4E79 !important;
+  color: white;
+  font-weight: bold;
+}
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.summary-card {
+  background: white;
+  padding: 22px;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  border-left: 6px solid var(--secondary);
+  transition: transform 0.2s;
+}
+.summary-card:hover { transform: translateY(-2px); }
+.summary-card h3 { margin: 0 0 10px; font-size: 16px; color: var(--primary); }
+.summary-card .value { font-size: 26px; font-weight: 700; color: var(--secondary); }
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  background: white;
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  width: fit-content;
+}
+.tabs button {
+  background: transparent;
+  color: var(--primary);
+  border: 2px solid transparent;
+  box-shadow: none;
+}
+.tabs button.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+.footer-note {
+  text-align: center;
+  color: #7f8c8d;
+  font-size: 12px;
+  margin-top: 30px;
+  padding: 10px;
+}
+.search-box {
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  min-width: 200px;
+  background: white;
+}
+@media (max-width: 768px) {
+  body { padding: 10px; }
+  .header { flex-direction: column; text-align: center; gap: 12px; padding: 20px; }
+  .controls { flex-direction: column; align-items: stretch; }
+  table { font-size: 10px; }
+  th, td { padding: 6px 4px; }
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Maaş Programı</h1>
+    <p></p>
+  </div>
+  <div>
+    <button onclick="exportData()">PDF İndir</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="active" onclick="showTab('bordro')">Bordro</button>
+  <button onclick="showTab('ozet')">Özet</button>
+  <button onclick="showTab('arsiv')">Arşiv</button>
+</div>
+
+<!-- BORDRO -->
+<div id="tab-bordro">
+  <div class="controls">
+    <label>Ay:</label>
+    <select id="filterAy" onchange="loadMonth()">
+      <option value="2026-10">Ekim 2026</option>
+      <option value="2026-09">Eylül 2026</option>
+      <option value="2026-08">Ağustos 2026</option>
+      <option value="2026-07">Temmuz 2026</option>
+    </select>
+    <select id="filterSube" onchange="renderTable()">
+      <option value="">Tüm Şubeler</option>
+    </select>
+    <input type="text" id="searchName" class="search-box" placeholder="İsim ara..." onkeypress="if(event.key==='Enter') renderTable()">
+    <button onclick="renderTable()" class="secondary">Ara</button>
+    <button onclick="addPerson()">+ Personel Ekle</button>
+    <input type="file" id="importFile" accept=".xlsx,.xls,.csv,.pdf" style="display:none;" onchange="importPeople(this)">
+    <button onclick="document.getElementById('importFile').click()" class="secondary">📄 Excel/PDF</button>
+    <button onclick="syncDevamsizlik()" class="secondary">Devamsızlık Çek</button>
+    <button onclick="syncCeza()" class="secondary">Ceza Çek</button>
+    <button onclick="arsivle()" class="secondary">Arşivle & Yeni Ay</button>
+    <button onclick="showTab('arsiv')" class="secondary">Arşiv</button>
+    <span id="personCount" style="margin-left:auto; font-weight:600;"></span>
+  </div>
+
+  <div class="card" style="overflow-x:auto;">
+    <table id="bordroTable">
+      <thead>
+        <tr>
+          <th>SIRA</th>
+          <th>AD SOYAD</th>
+          <th>MAAŞ</th>
+          <th>GÜN</th>
+          <th>DEVAMSIZLIK</th>
+          <th>AVANS</th>
+          <th>CEZA</th>
+          <th>BES</th>
+          <th>HACİZ</th>
+          <th>BORÇ</th>
+          <th>TOPLAM KESİNTİ</th>
+          <th>HAKEDİŞ</th>
+          <th>TAŞIMA / SİL</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+      <tfoot>
+        <tr class="totals" id="totalRow"></tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+<!-- ÖZET -->
+<div id="tab-ozet" style="display:none;">
+  <div class="summary-grid" id="summaryGrid"></div>
+</div>
+
+<!-- ARŞİV -->
+<div id="tab-arsiv" style="display:none;">
+  <div class="card" style="padding:20px;">
+    <h3>Arşivlenmiş Aylar</h3>
+    <div id="arsivList"></div>
+  </div>
+</div>
+<div id="tab-subeler" style="display:none;">
+  <div class="card" style="padding:20px;">
+    <h3>Şube Listesi</h3>
+    <p>Yeni şube eklemek için aşağıdaki alana yazıp Enter'a basın.</p>
+    <input type="text" id="newSubeInput" placeholder="Yeni şube adı..." style="width:300px;" onkeypress="if(event.key==='Enter') addSube()">
+    <button onclick="addSube()">Ekle</button>
+    <ul id="subeList" style="margin-top:16px; line-height:2;"></ul>
+  </div>
+</div>
+
+
+
+<script>
+const STORAGE_KEY = 'cadde_maas_v2';
+
+let data = {
+  subeler: ['Cadde', 'Kadıköy', 'Çengelköy', 'Taksim Pide', 'Taksim Büfe'],
+  aylar: {}
+};
+
+function getCurrentMonth() {
+  return document.getElementById('filterAy')?.value || '2026-10';
+}
+
+function loadMonth() {
+  const ay = getCurrentMonth();
+  if (!data.aylar[ay]) {
+    data.aylar[ay] = { personeller: [] };
+    // İlk açılışta Cadde'yi doldur
+    if (ay === '2026-10' && data.aylar[ay].personeller.length === 0) {
+      data.aylar[ay].personeller = caddeInit.map(p => ({...p, sube: 'Cadde', id: Date.now() + Math.random()}));
+    }
+  }
+  // Yeni şubeleri ve personelleri ekle
+  const required = ['Cadde', 'Kadıköy', 'Çengelköy', 'Taksim Pide', 'Taksim Büfe'];
+  required.forEach(s => {
+    if (!data.subeler.includes(s)) data.subeler.push(s);
+  });
+  cengelInit.forEach(p => {
+    if (!data.aylar[ay].personeller.find(x => x.ad === p.ad && x.sube === 'Çengelköy')) {
+      data.aylar[ay].personeller.push({...p, sube: 'Çengelköy', id: Date.now() + Math.random()});
+    }
+  });
+  kadikoyInit.forEach(p => {
+    if (!data.aylar[ay].personeller.find(x => x.ad === p.ad && x.sube === 'Kadıköy')) {
+      data.aylar[ay].personeller.push({...p, sube: 'Kadıköy', id: Date.now() + Math.random()});
+    }
+  });
+  save();
+  updateSubeSelect();
+  renderTable();
+  renderSubeList();
+}
+
+function load() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    data = JSON.parse(saved);
+  }
+  loadMonth();
+}
+
+// Cadde güncel liste
+const cengelInit = [
+  "EMRE BULUT","MURAT GÜNEY","AHMET ÖZÇELİK","TOLGA BULUT","GÜLEN OTAÇ","VEYSEL YILMAZ","MUSTAFA YILDIRIM","BEYTULLAH ÖMER YAĞMUR","ŞEYMA KARA","KEMAL KÖRPE","BİLAL KAHVECİ","ALİ ÖMER YILMAZ","FATİH İPEK","İSMAİL ŞİMŞEK","TAHİR ŞAHBAZ","SEMİH DÜNDAR","ABDULSAMET YAPRAK","METİN BULUT","OSMAN KAPLAN","RAMAZAN KOÇAL","YAŞAR KEMAL HAN","UĞUR YILMAZ","NECMETTİN AKYILDIZ","AZİM RECEBİ","AZİMYAR SHAHABUDDİN"
+].map(ad => ({ad, maas:0, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0}));
+
+const kadikoyInit = [
+  "ÖZAY ALŞAN","ABDULKADİR AKYÜZ","MUHAMMED AKYÜZ","SEDAT KIZILKAYA","MAHMUT TEKER","İSRAFİL ÖZTÜRK","CAFER KOCA","İSA AKYILDIZ","MUHSİN IŞIK","RAMAZAN KURAL","RAMAZAN UZUNALP","GÜRKAN EYÜPOĞLU","VEDAT ÖZTÜRK","BİLAL DENERİ","VEPA","GÖKHAN YEŞİLBAŞ","EREN YILMAZ","İSMAİL ALBAYRAK","MURAT KAYA","MUHSİN ÖZMERT","EMİRHAN KANDEMİR","AZAT ASLANGRİ","RIZVAN FINDIK","K. ENDER KIZILKAYA","ERAY SOFUOĞLU","FURKAN ARDA","FERAT GÜNDÜZ","İBRAHİM KARAMAN","YİĞİT ASLANGRİ","TUNCAY ÇAĞLAYAN","ABDULSAMET SEYAR","BATUHAN SEYAR","ALİ BİNGÖL","ALTAN BULUT","YASİN TERCANL","İSMAİL YAZICI","EMİR ÇAPAR","OĞUZHAN ÇAVUSOĞLU","TAHSIN CERAN","MUHAMMED ONUR SAMUR","İSMAİL BURAK AKYOL"
+].map(ad => ({ad, maas:0, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0}));
+
+const caddeInit = [
+  {ad:"CEMAL ÇELİK", maas:86500, gun:3, avans:0, ceza:0, bes:0, haciz:0, borc:15000},
+  {ad:"ABDULLAH AVCI", maas:73500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"CUMHUR YİĞİT", maas:85500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"HÜSAMETTİN KÖRPE", maas:85500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"SALİH USTA", maas:81000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"BURHAN BAYAKIR", maas:74500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"ERDAL ÇAVDAR", maas:81000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"OKTAY ÇELİK", maas:81000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"HİKMET ERDOĞDU", maas:69000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"SELİM ORTAHİSAR", maas:81000, gun:0, avans:0, ceza:1000, bes:0, haciz:0, borc:0},
+  {ad:"MEHMET EMİN MÜDERRİSOĞLU", maas:69000, gun:0, avans:0, ceza:0, bes:3090, haciz:0, borc:0},
+  {ad:"KÖKSAL SOYKAN", maas:69000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"FERHAT AVCI", maas:81000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"ERHAN SOFUOĞLU", maas:69000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"HASAN ALİ GERZ", maas:85500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"MUHAMMET CAN SARICA", maas:74500, gun:0, avans:0, ceza:0, bes:2485, haciz:0, borc:0},
+  {ad:"BİLAL SÜRİKLİ", maas:57000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"HASAN KOÇALAN", maas:69000, gun:0, avans:0, ceza:1000, bes:0, haciz:0, borc:0},
+  {ad:"UĞUR GÖKER", maas:65500, gun:0, avans:0, ceza:1000, bes:0, haciz:0, borc:0},
+  {ad:"BEDRETTİN AVCI", maas:74500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"EMRE POLAT", maas:81000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"SELAHATTİN AVCI", maas:81000, gun:0, avans:0, ceza:2000, bes:0, haciz:0, borc:0},
+  {ad:"CANER AVCI", maas:81000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"ALİ AKKOCA", maas:83000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"AZAD MYRADOV", maas:69000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"MURAT TORUN", maas:65500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"MEHMET ÇELİK", maas:76000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"YILMAZ AVCI", maas:81000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"RAMAZAN BAYAKIR", maas:63500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"ONUR AVCI", maas:73500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"MUHAMMET MUSTAFA BAYAKIR", maas:74500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"CİHAN AVCI", maas:63500, gun:0, avans:0, ceza:500, bes:2853, haciz:0, borc:0},
+  {ad:"FURKAN KAVAK", maas:70500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"SEPİDEH MENATTİ", maas:70500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"MUHAMMET EREN ÇELİK", maas:69000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"MURAT DAĞIDIR", maas:76000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"SEYFİ ÇELİK", maas:65500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"FEVZİ DOLAK", maas:65500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"AYDIN AVCI", maas:82500, gun:0, avans:0, ceza:500, bes:0, haciz:0, borc:0},
+  {ad:"HAKAN ATMACA", maas:65500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"ABDULLAH DENERİ", maas:57000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"HAMİT AKPINAR", maas:57000, gun:0, avans:0, ceza:500, bes:2502, haciz:0, borc:0},
+  {ad:"ADİL EMİR ÇELİK", maas:69000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"ABDURRAHMAN KAPAN", maas:65500, gun:0, avans:0, ceza:0, bes:2918, haciz:0, borc:0},
+  {ad:"SAYİM GÜMÜŞ", maas:65500, gun:1, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"YUNUS EMRE ÇELİK", maas:70500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"RAMAZAN YAVUZ", maas:65500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"ZEYNEP SOFUOĞLU", maas:63500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:25000},
+  {ad:"MUSTAFA AYDIN", maas:65500, gun:1, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"HASAN İPEK", maas:87500, gun:1, avans:0, ceza:0, bes:0, haciz:0, borc:29170},
+  {ad:"KAAN ATASOY", maas:57000, gun:0, avans:0, ceza:0, bes:2502, haciz:0, borc:0},
+  {ad:"ABDULLAH GÜRKAN", maas:81500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"VADETTİN AVCI", maas:63000, gun:0, avans:0, ceza:0, bes:2643, haciz:0, borc:0},
+  {ad:"ERCAN ALTUN", maas:76000, gun:0, avans:0, ceza:0, bes:3485, haciz:0, borc:50000},
+  {ad:"OSMAN CEYLAN", maas:65500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"SEMİH SOFUOĞLU", maas:85500, gun:0, avans:0, ceza:0, bes:2850, haciz:0, borc:0},
+  {ad:"ABDURRAHMAN ÖZKAN", maas:69000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"FIRAT AVCI", maas:81000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"MENDERES SOFUOĞLU", maas:82500, gun:2, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"HİCABI AKYILDIZ", maas:70000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:20000},
+  {ad:"ABDURRAHMAN BULUT", maas:56000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"MUHİTTİN ÖZÇELİK", maas:67500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"MUHAMMET SOFUOĞLU", maas:85500, gun:0, avans:0, ceza:500, bes:0, haciz:0, borc:0},
+  {ad:"MUHAMMED MUMİN ILGAR", maas:57000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"MÜSLİM KANIKARA", maas:60000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"BAYRAM YETER", maas:65500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+];
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function calc(p) {
+  const dev = Math.round((p.maas || 0) / 30 * (p.gun || 0));
+  const toplam = dev + (p.avans||0) + (p.ceza||0) + (p.bes||0) + (p.haciz||0) + (p.borc||0);
+  const hakedis = (p.maas || 0) - toplam;
+  return {dev, toplam, hakedis};
+}
+
+function format(n) {
+  return (n||0).toLocaleString('tr-TR') + ' ₺';
+}
+
+function normalize(str) {
+  return (str || '').toLowerCase()
+    .replace(/ı/g, 'i').replace(/ğ/g, 'g').replace(/ü/g, 'u')
+    .replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c')
+    .replace(/[^a-z0-9\s]/g, '').trim();
+}
+
+function isSimilar(name, query) {
+  if (!query) return true;
+  const n = normalize(name);
+  const q = normalize(query);
+  if (n.includes(q) || q.includes(n)) return true;
+
+  // Kelime bazlı eşleşme
+  const qWords = q.split(/\s+/).filter(Boolean);
+  const nWords = n.split(/\s+/).filter(Boolean);
+  if (qWords.every(qw => nWords.some(nw => nw.includes(qw) || qw.includes(nw) || nw.startsWith(qw.slice(0, 3))))) return true;
+
+  // Basit karakter benzerliği (yanlış yazım toleransı)
+  let matches = 0;
+  const minLen = Math.min(n.length, q.length);
+  for (let i = 0; i < minLen; i++) {
+    if (n[i] === q[i]) matches++;
+  }
+  return (matches / Math.max(n.length, q.length)) >= 0.5;
+}
+
+function renderTable() {
+  const filter = document.getElementById('filterSube').value;
+  const search = (document.getElementById('searchName')?.value || '').trim();
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  let list = [];
+  const ay = getCurrentMonth();
+  const personeller = data.aylar[ay]?.personeller || [];
+  if (filter) {
+    list = personeller.filter(p => p.sube === filter);
+  }
+  if (search) {
+    list = list.filter(p => isSimilar(p.ad || '', search));
+  }
+
+  let sumMaas=0, sumDev=0, sumAv=0, sumCeza=0, sumBes=0, sumHaciz=0, sumBorc=0, sumTop=0, sumHak=0;
+
+  list.forEach((p, idx) => {
+    const c = calc(p);
+    sumMaas += p.maas||0; sumDev += c.dev; sumAv += p.avans||0;
+    sumCeza += p.ceza||0; sumBes += p.bes||0; sumHaciz += p.haciz||0;
+    sumBorc += p.borc||0; sumTop += c.toplam; sumHak += c.hakedis;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${idx + 1}</td>
+      <td class="name"><input type="text" value="${p.ad||''}" onchange="updateField('${p.id}','ad',this.value)"></td>
+      <td><input type="number" value="${p.maas||0}" onchange="updateField('${p.id}','maas',+this.value)"></td>
+      <td><input type="number" value="${p.gun||0}" onchange="updateField('${p.id}','gun',+this.value)"></td>
+      <td><input class="formula" value="${format(c.dev)}" readonly></td>
+      <td><input type="number" value="${p.avans||0}" onchange="updateField('${p.id}','avans',+this.value)"></td>
+      <td><input type="number" value="${p.ceza||0}" onchange="updateField('${p.id}','ceza',+this.value)"></td>
+      <td><input type="number" value="${p.bes||0}" onchange="updateField('${p.id}','bes',+this.value)"></td>
+      <td><input type="number" value="${p.haciz||0}" onchange="updateField('${p.id}','haciz',+this.value)"></td>
+      <td><input type="number" value="${p.borc||0}" onchange="updateField('${p.id}','borc',+this.value)"></td>
+      <td><input class="formula" value="${format(c.toplam)}" readonly></td>
+      <td><input class="formula" value="${format(c.hakedis)}" readonly style="font-weight:700;color:#1F4E79"></td>
+      <td>
+        <input type="number" min="1" value="${idx + 1}" style="width:55px;padding:4px;text-align:center;" onchange="moveToPosition('${p.id}', +this.value)" title="Sıra numarası yaz">
+        <button class="danger" onclick="deletePerson('${p.id}')" style="padding:4px 8px;font-size:12px;margin-left:4px;">Sil</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('totalRow').innerHTML = `
+    <td></td>
+    <td>TOPLAM (${list.length} kişi)</td>
+    <td>${format(sumMaas)}</td>
+    <td></td>
+    <td>${format(sumDev)}</td>
+    <td>${format(sumAv)}</td>
+    <td>${format(sumCeza)}</td>
+    <td>${format(sumBes)}</td>
+    <td>${format(sumHaciz)}</td>
+    <td>${format(sumBorc)}</td>
+    <td>${format(sumTop)}</td>
+    <td>${format(sumHak)}</td>
+    <td></td>
+    <td></td>
+  `;
+  document.getElementById('personCount').textContent = `${list.length} personel`;
+  renderSummary();
+
+  const isArsiv = data.aylar[ay]?.arsiv;
+  if (isArsiv) {
+    // Disable inputs if archived
+    setTimeout(() => {
+      document.querySelectorAll('#tbody input').forEach(inp => inp.disabled = true);
+    }, 50);
+  }
+}
+
+function updateField(id, field, value) {
+  const ay = getCurrentMonth();
+  const p = data.aylar[ay].personeller.find(x => x.id == id);
+  if (p) {
+    p[field] = value;
+    save();
+    renderTable();
+  }
+}
+
+function importPeople(input){
+  const sube = document.getElementById('filterSube').value;
+  if (!sube) {
+    alert('Önce bir şube seçin');
+    input.value = '';
+    return;
+  }
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const text = e.target.result;
+    const lines = text.split(/\n/).map(s=>s.trim()).filter(Boolean);
+    const ay = getCurrentMonth();
+    const sube = document.getElementById('filterSube').value || data.subeler[0] || 'Cadde';
+    let added = 0;
+    lines.forEach(line=>{
+      const parts = line.split(/[,;\t]/).map(s=>s.trim());
+      const name = parts[0];
+      const maas = parseInt(parts[1]) || 0;
+      if(name && name.length>2 && !/^\d+$/.test(name)){
+        if(!data.aylar[ay].personeller.find(p=>p.ad===name && p.sube===sube)){
+          data.aylar[ay].personeller.push({id:Date.now()+Math.random(), sube, ad:name, maas, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0});
+          added++;
+        }
+      }
+    });
+    save();
+    renderTable();
+    alert(added + " kişi eklendi");
+  };
+  reader.readAsText(file);
+}
+function addPerson() {
+  const ay = getCurrentMonth();
+  const sube = document.getElementById('filterSube').value || data.subeler[0] || 'Cadde';
+  data.aylar[ay].personeller.push({
+    id: Date.now() + Math.random(),
+    sube,
+    ad: 'Yeni Personel',
+    maas: 0, gun: 0, avans: 0, ceza: 0, bes: 0, haciz: 0, borc: 0
+  });
+  save();
+  renderTable();
+}
+
+function moveToPosition(id, newPos) {
+  if (!newPos || newPos < 1) return;
+  const ay = getCurrentMonth();
+  const filter = document.getElementById('filterSube').value;
+  let list = [...data.aylar[ay].personeller];
+  if (filter) list = list.filter(p => p.sube === filter);
+
+  const fromIdx = list.findIndex(p => p.id == id);
+  if (fromIdx === -1) return;
+
+  let toIdx = newPos - 1;
+  if (toIdx >= list.length) toIdx = list.length - 1;
+  if (toIdx < 0) toIdx = 0;
+  if (fromIdx === toIdx) return;
+
+  const [moved] = list.splice(fromIdx, 1);
+  list.splice(toIdx, 0, moved);
+
+  if (filter) {
+    const others = data.aylar[ay].personeller.filter(p => p.sube !== filter);
+    data.aylar[ay].personeller = [...others, ...list];
+  } else {
+    data.aylar[ay].personeller = list;
+  }
+  save();
+  renderTable();
+}
+
+// Eski sürükle kodu kaldırıldı
+function movePerson() {}
+
+function updateSubeSelect() {
+  const sel = document.getElementById('filterSube');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Tüm Şubeler</option>' + data.subeler.map(s => `<option>${s}</option>`).join('');
+  sel.value = current;
+}
+
+function addSube() {
+  const input = document.getElementById('newSubeInput');
+  const name = input.value.trim();
+  if (name && !data.subeler.includes(name)) {
+    data.subeler.push(name);
+    save();
+    updateSubeSelect();
+    renderSubeList();
+    input.value = '';
+  }
+}
+
+function syncDevamsizlik() {
+  const sube = document.getElementById('filterSube').value;
+  if (!sube) {
+    alert('Önce bir şube seçin');
+    return;
+  }
+
+  const mesaiDev = {
+    'Cadde': [
+      {ad:"MUSTAFA AYDIN", gun:1},
+      {ad:"SAYİM GÜMÜŞ", gun:1},
+      {ad:"MENDERES SOFUOĞLU", gun:2},
+      {ad:"HASAN İPEK", gun:10},
+      {ad:"CEMAL ÇELİK", gun:3}
+    ],
+    'Kadıköy': [
+      {ad:"ÖZAY ALŞAN", gun:1}
+    ],
+    'Çengelköy': [
+      {ad:"AHMET ÖZÇELİK", gun:1}
+    ]
+  };
+
+  const ay = getCurrentMonth();
+  const list = mesaiDev[sube] || [];
+  if (list.length === 0) {
+    alert(sube + ' için henüz kayıt yok. Test verisi ekledikten sonra tekrar dene.');
+    return;
+  }
+
+  let updated = 0;
+  list.forEach(d => {
+    const p = data.aylar[ay].personeller.find(x => x.ad === d.ad && x.sube === sube);
+    if (p) {
+      p.gun = d.gun;
+      updated++;
+    }
+  });
+  save();
+  renderTable();
+  alert(sube + ' şubesinde ' + updated + ' kişinin devamsızlığı güncellendi');
+}
+
+function syncCeza() {
+  const sube = document.getElementById('filterSube').value;
+  if (!sube) {
+    alert('Önce bir şube seçin');
+    return;
+  }
+
+  const mesaiCeza = {
+    'Cadde': [
+      {ad:"SELİM ORTAHİSAR", tutar:1000},
+      {ad:"SELAHATTİN AVCI", tutar:2000},
+      {ad:"HAMİT AKPINAR", tutar:500},
+      {ad:"CİHAN AVCI", tutar:500},
+      {ad:"HASAN KOÇALAN", tutar:1000},
+      {ad:"MUHAMMET SOFUOĞLU", tutar:500},
+      {ad:"AYDIN AVCI", tutar:500},
+      {ad:"UĞUR GÖKER", tutar:1000},
+      {ad:"BEDRETTİN AVCI", tutar:1000}
+    ],
+    'Kadıköy': [
+      {ad:"ÖZAY ALŞAN", tutar:1000}
+    ],
+    'Çengelköy': [
+      {ad:"TOLGA BULUT", tutar:1000}
+    ]
+  };
+
+  const ay = getCurrentMonth();
+  const list = mesaiCeza[sube] || [];
+  if (list.length === 0) {
+    alert(sube + ' için henüz kayıt yok. Test verisi ekledikten sonra tekrar dene.');
+    return;
+  }
+
+  let updated = 0;
+  list.forEach(c => {
+    const p = data.aylar[ay].personeller.find(x => x.ad === c.ad && x.sube === sube);
+    if (p) {
+      p.ceza = c.tutar;
+      updated++;
+    }
+  });
+  save();
+  renderTable();
+  alert(sube + ' şubesinde ' + updated + ' kişinin cezası güncellendi');
+}
+
+function arsivle() {
+  const ay = getCurrentMonth();
+  if (!data.aylar[ay]) return;
+  if (!confirm(ay + ' ayını arşivleyip yeni ay başlatılsın mı?')) return;
+  
+  // Mark as archived
+  data.aylar[ay].arsiv = true;
+  
+  // Create next month
+  const [y, m] = ay.split('-').map(Number);
+  const next = new Date(y, m, 1);
+  const nextAy = next.getFullYear() + '-' + String(next.getMonth() + 1).padStart(2, '0');
+  
+  if (!data.aylar[nextAy]) {
+    data.aylar[nextAy] = { 
+      personeller: data.aylar[ay].personeller.map(p => ({...p, id: Date.now() + Math.random(), gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0}))
+    };
+  }
+  
+  // Update select
+  const sel = document.getElementById('filterAy');
+  if (!Array.from(sel.options).some(o => o.value === nextAy)) {
+    const opt = document.createElement('option');
+    opt.value = nextAy;
+    opt.textContent = next.toLocaleDateString('tr-TR', {month:'long', year:'numeric'});
+    sel.insertBefore(opt, sel.firstChild);
+  }
+  sel.value = nextAy;
+  
+  save();
+  loadMonth();
+  alert(ay + ' arşivlendi. Yeni ay: ' + nextAy);
+}
+
+function renderArsiv() {
+  const div = document.getElementById('arsivList');
+  const filter = document.getElementById('filterSube').value;
+  const arsivler = Object.keys(data.aylar).filter(a => data.aylar[a].arsiv);
+  if (arsivler.length === 0) {
+    div.innerHTML = '<p>Henüz arşivlenmiş ay yok.</p>';
+    return;
+  }
+  div.innerHTML = arsivler.map(a => {
+    let list = data.aylar[a].personeller || [];
+    if (filter) list = list.filter(p => p.sube === filter);
+    let hak = 0;
+    list.forEach(p => hak += calc(p).hakedis);
+    return `<div style="margin:10px 0;padding:12px;background:#f8f9fa;border-radius:8px;">
+      <b>${a}</b> ${filter ? '(' + filter + ')' : ''} — ${list.length} kişi — Hakediş: ${format(hak)}
+      <button onclick="goruntuleArsiv('${a}')" style="margin-left:10px;">Görüntüle</button>
+    </div>`;
+  }).join('');
+}
+
+function goruntuleArsiv(ay) {
+  alert(ay + ' arşiv görüntüleme (salt okunur) henüz detaylı tablo olarak eklenmedi. İstersen ekleyebilirim.');
+}
+
+function renderSubeList() {
+  const ul = document.getElementById('subeList');
+  ul.innerHTML = data.subeler.map(s => `<li>${s} <button onclick="removeSube('${s}')" style="padding:2px 8px;font-size:12px;" class="danger">Sil</button></li>`).join('');
+}
+
+function removeSube(name) {
+  if (confirm(`"${name}" şubesini silmek istediğinize emin misiniz?`)) {
+    data.subeler = data.subeler.filter(s => s !== name);
+    data.aylar[getCurrentMonth()].personeller.forEach(p => { if (p.sube === name) p.sube = data.subeler[0] || ''; });
+    save();
+    updateSubeSelect();
+    renderSubeList();
+    renderTable();
+  }
+}
+
+function renderSummary() {
+  const grid = document.getElementById('summaryGrid');
+  let html = '';
+  data.subeler.forEach(s => {
+    const list = data.aylar[getCurrentMonth()]?.personeller.filter(p => p.sube === s) || [];
+    let maas=0, hak=0;
+    list.forEach(p => {
+      const c = calc(p);
+      maas += p.maas||0;
+      hak += c.hakedis;
+    });
+    html += `<div class="summary-card">
+      <h3>${s}</h3>
+      <div>${list.length} personel</div>
+      <div class="value">${format(hak)}</div>
+      <div style="font-size:13px;color:#666;">Maaş: ${format(maas)}</div>
+    </div>`;
+  });
+  // Genel
+  let gMaas=0, gHak=0;
+  const personeller = data.aylar[getCurrentMonth()]?.personeller || [];
+  personeller.forEach(p => {
+    gMaas += p.maas||0;
+    gHak += calc(p).hakedis;
+  });
+  html += `<div class="summary-card" style="border-left-color:#1F4E79;">
+    <h3>GENEL TOPLAM</h3>
+    <div>${personeller.length} personel</div>
+    <div class="value">${format(gHak)}</div>
+    <div style="font-size:13px;color:#666;">Maaş: ${format(gMaas)}</div>
+  </div>`;
+  grid.innerHTML = html;
+}
+
+function showTab(name) {
+  document.getElementById('tab-bordro').style.display = name==='bordro'?'block':'none';
+  document.getElementById('tab-ozet').style.display = name==='ozet'?'block':'none';
+  document.getElementById('tab-subeler').style.display = name==='subeler'?'block':'none';
+  document.getElementById('tab-arsiv').style.display = name==='arsiv'?'block':'none';
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  if (name==='ozet') renderSummary();
+  if (name==='subeler') renderSubeList();
+  if (name==='arsiv') renderArsiv();
+}
+
+function exportData() {
+  const filter = document.getElementById('filterSube').value;
+  const ay = getCurrentMonth();
+  const personeller = data.aylar[ay]?.personeller || [];
+  const list = filter ? personeller.filter(p => p.sube === filter) : personeller;
+  const title = filter || "Tüm Şubeler";
+  
+  if (!list.length) {
+    alert('Önce şube seçin ve liste yüklensin');
+    return;
+  }
+
+  const fontUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf';
+  const fontBoldUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Medium.ttf';
+  
+  Promise.all([
+    fetch(fontUrl).then(r => r.arrayBuffer()),
+    fetch(fontBoldUrl).then(r => r.arrayBuffer())
+  ]).then(([buf, bufBold]) => {
+    const toBase64 = (buffer) => {
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      return btoa(binary);
+    };
+    generatePDF(toBase64(buf), toBase64(bufBold));
+  }).catch(() => generatePDF(null, null));
+
+  function generatePDF(fontBase64, fontBoldBase64) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    
+    if (fontBase64) {
+      doc.addFileToVFS('Roboto-Regular.ttf', fontBase64);
+      doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+      if (fontBoldBase64) {
+        doc.addFileToVFS('Roboto-Medium.ttf', fontBoldBase64);
+        doc.addFont('Roboto-Medium.ttf', 'Roboto', 'bold');
+      }
+      doc.setFont('Roboto');
+    }
+    
+    doc.setFillColor(31, 78, 121);
+    doc.rect(0, 0, 297, 12, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(11);
+    doc.text("Maaş Programı - " + title + "  |  " + ay, 8, 8);
+    
+    const headers = [["Sıra", "Ad Soyad", "Maaş", "Gün", "Devamsızlık", "Avans", "Ceza", "BES", "Haciz", "Borç", "Toplam", "Hakediş"]];
+    const body = list.map((p, idx) => {
+      const c = calc(p);
+      return [
+        idx + 1,
+        p.ad || "",
+        (p.maas || 0).toLocaleString("tr-TR"),
+        p.gun || 0,
+        c.dev.toLocaleString("tr-TR"),
+        (p.avans || 0).toLocaleString("tr-TR"),
+        (p.ceza || 0).toLocaleString("tr-TR"),
+        (p.bes || 0).toLocaleString("tr-TR"),
+        (p.haciz || 0).toLocaleString("tr-TR"),
+        (p.borc || 0).toLocaleString("tr-TR"),
+        c.toplam.toLocaleString("tr-TR"),
+        c.hakedis.toLocaleString("tr-TR")
+      ];
+    });
+    
+    let sumMaas=0, sumDev=0, sumAv=0, sumCeza=0, sumBes=0, sumHaciz=0, sumBorc=0, sumTop=0, sumHak=0;
+    list.forEach(p => {
+      const c = calc(p);
+      sumMaas += p.maas||0; sumDev += c.dev; sumAv += p.avans||0;
+      sumCeza += p.ceza||0; sumBes += p.bes||0; sumHaciz += p.haciz||0;
+      sumBorc += p.borc||0; sumTop += c.toplam; sumHak += c.hakedis;
+    });
+    const foot = [["", "TOPLAM", sumMaas.toLocaleString("tr-TR"), "", sumDev.toLocaleString("tr-TR"), sumAv.toLocaleString("tr-TR"), sumCeza.toLocaleString("tr-TR"), sumBes.toLocaleString("tr-TR"), sumHaciz.toLocaleString("tr-TR"), sumBorc.toLocaleString("tr-TR"), sumTop.toLocaleString("tr-TR"), sumHak.toLocaleString("tr-TR")]];
+    
+    doc.autoTable({
+      head: headers,
+      body: body,
+      foot: foot,
+      startY: 15,
+      styles: { 
+        font: fontBase64 ? "Roboto" : "helvetica",
+        fontSize: 6.5, 
+        cellPadding: 1,
+        textColor: [30, 30, 30],
+        lineColor: [200, 200, 200],
+        lineWidth: 0.1
+      },
+      headStyles: { 
+        fillColor: [31, 78, 121], 
+        textColor: 255,
+        fontStyle: "bold",
+        halign: "center",
+        fontSize: 6.5
+      },
+      footStyles: { 
+        fillColor: [31, 78, 121], 
+        textColor: 255,
+        fontStyle: "bold"
+      },
+      alternateRowStyles: { fillColor: [245, 247, 250] },
+      columnStyles: {
+        0: { halign: "center", cellWidth: 12 },
+        1: { halign: "left", cellWidth: 50 },
+        2: { halign: "right", cellWidth: 20 },
+        3: { halign: "center", cellWidth: 14 },
+        4: { halign: "right", cellWidth: 22 },
+        5: { halign: "right", cellWidth: 18 },
+        6: { halign: "right", cellWidth: 18 },
+        7: { halign: "right", cellWidth: 18 },
+        8: { halign: "right", cellWidth: 18 },
+        9: { halign: "right", cellWidth: 18 },
+        10: { halign: "right", cellWidth: 22 },
+        11: { halign: "right", cellWidth: 22, fontStyle: "bold" }
+      },
+      margin: { left: 4, right: 4, top: 15, bottom: 8 }
+    });
+    
+    doc.save("Maas_" + title.replace(/\s+/g, "_") + "_" + ay + ".pdf");
+  }
+}
+
+function importData() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        data = JSON.parse(ev.target.result);
+        save();
+        updateSubeSelect();
+        renderTable();
+        alert('İçe aktarıldı!');
+      } catch(err) { alert('Hatalı dosya'); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+load();
+</script>
+</body>
+</html>
