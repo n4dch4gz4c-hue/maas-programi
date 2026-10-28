@@ -180,6 +180,8 @@ input.formula {
   th, td { padding: 6px 4px; }
 }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
@@ -280,6 +282,16 @@ input.formula {
 
 
 <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBHgiy7cM5TRYz2zuwY6CeFJwrqsVCaZjk",
+  authDomain: "cadde-mesai.firebaseapp.com",
+  databaseURL: "https://cadde-mesai-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "cadde-mesai",
+  storageBucket: "cadde-mesai.appspot.com"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 const STORAGE_KEY = 'cadde_maas_v2';
 
 let data = {
@@ -634,41 +646,26 @@ function syncDevamsizlik() {
     alert('Önce bir şube seçin');
     return;
   }
-
-  const mesaiDev = {
-    'Cadde': [
-      {ad:"MUSTAFA AYDIN", gun:1},
-      {ad:"SAYİM GÜMÜŞ", gun:1},
-      {ad:"MENDERES SOFUOĞLU", gun:2},
-      {ad:"HASAN İPEK", gun:10},
-      {ad:"CEMAL ÇELİK", gun:3}
-    ],
-    'Kadıköy': [
-      {ad:"ÖZAY ALŞAN", gun:1}
-    ],
-    'Çengelköy': [
-      {ad:"AHMET ÖZÇELİK", gun:1}
-    ]
-  };
-
   const ay = getCurrentMonth();
-  const list = mesaiDev[sube] || [];
-  if (list.length === 0) {
-    alert(sube + ' için henüz kayıt yok. Test verisi ekledikten sonra tekrar dene.');
-    return;
-  }
-
-  let updated = 0;
-  list.forEach(d => {
-    const p = data.aylar[ay].personeller.find(x => x.ad === d.ad && x.sube === sube);
-    if (p) {
-      p.gun = d.gun;
-      updated++;
+  db.ref("mesai/" + sube).once("value").then(snap => {
+    const dataMesai = snap.val() || {};
+    const list = dataMesai.devamsizlik || [];
+    if (list.length === 0) {
+      alert(sube + ' için devamsızlık kaydı yok.');
+      return;
     }
-  });
-  save();
-  renderTable();
-  alert(sube + ' şubesinde ' + updated + ' kişinin devamsızlığı güncellendi');
+    let updated = 0;
+    list.forEach(d => {
+      const p = data.aylar[ay].personeller.find(x => x.ad === d.kisi && x.sube === sube);
+      if (p) {
+        p.gun = d.gun || 0;
+        updated++;
+      }
+    });
+    save();
+    renderTable();
+    alert(sube + ' şubesinde ' + updated + ' kişinin devamsızlığı güncellendi');
+  }).catch(e => alert('Hata: ' + e.message));
 }
 
 function syncCeza() {
@@ -677,45 +674,26 @@ function syncCeza() {
     alert('Önce bir şube seçin');
     return;
   }
-
-  const mesaiCeza = {
-    'Cadde': [
-      {ad:"SELİM ORTAHİSAR", tutar:1000},
-      {ad:"SELAHATTİN AVCI", tutar:2000},
-      {ad:"HAMİT AKPINAR", tutar:500},
-      {ad:"CİHAN AVCI", tutar:500},
-      {ad:"HASAN KOÇALAN", tutar:1000},
-      {ad:"MUHAMMET SOFUOĞLU", tutar:500},
-      {ad:"AYDIN AVCI", tutar:500},
-      {ad:"UĞUR GÖKER", tutar:1000},
-      {ad:"BEDRETTİN AVCI", tutar:1000}
-    ],
-    'Kadıköy': [
-      {ad:"ÖZAY ALŞAN", tutar:1000}
-    ],
-    'Çengelköy': [
-      {ad:"TOLGA BULUT", tutar:1000}
-    ]
-  };
-
   const ay = getCurrentMonth();
-  const list = mesaiCeza[sube] || [];
-  if (list.length === 0) {
-    alert(sube + ' için henüz kayıt yok. Test verisi ekledikten sonra tekrar dene.');
-    return;
-  }
-
-  let updated = 0;
-  list.forEach(c => {
-    const p = data.aylar[ay].personeller.find(x => x.ad === c.ad && x.sube === sube);
-    if (p) {
-      p.ceza = c.tutar;
-      updated++;
+  db.ref("mesai/" + sube).once("value").then(snap => {
+    const dataMesai = snap.val() || {};
+    const list = dataMesai.cezalar || [];
+    if (list.length === 0) {
+      alert(sube + ' için ceza kaydı yok.');
+      return;
     }
-  });
-  save();
-  renderTable();
-  alert(sube + ' şubesinde ' + updated + ' kişinin cezası güncellendi');
+    let updated = 0;
+    list.forEach(c => {
+      const p = data.aylar[ay].personeller.find(x => x.ad === c.kisi && x.sube === sube);
+      if (p) {
+        p.ceza = c.tutar || 0;
+        updated++;
+      }
+    });
+    save();
+    renderTable();
+    alert(sube + ' şubesinde ' + updated + ' kişinin cezası güncellendi');
+  }).catch(e => alert('Hata: ' + e.message));
 }
 
 function arsivle() {
