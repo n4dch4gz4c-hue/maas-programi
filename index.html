@@ -249,7 +249,7 @@ function deletePerson(id) {
     <p></p>
   </div>
   <div>
-    <button onclick="exportData()">Görüntüle</button>
+    <button onclick="exportData()">PDF İndir</button>
   </div>
 </div>
 
@@ -824,7 +824,18 @@ function renderArsiv() {
 }
 
 function goruntuleArsiv(ay) {
-  alert(ay + ' arşiv görüntüleme (salt okunur) henüz detaylı tablo olarak eklenmedi. İstersen ekleyebilirim.');
+  const filter = document.getElementById('filterSube').value;
+  const personeller = data.aylar[ay]?.personeller || [];
+  const list = filter ? personeller.filter(p => p.sube === filter) : personeller;
+  if (!list.length) {
+    alert('Bu arşivde veri yok');
+    return;
+  }
+  // Temporarily set month and call export
+  const oldAy = document.getElementById('filterAy').value;
+  document.getElementById('filterAy').value = ay;
+  exportData();
+  document.getElementById('filterAy').value = oldAy;
 }
 
 function renderSubeList() {
