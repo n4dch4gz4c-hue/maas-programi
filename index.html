@@ -334,11 +334,27 @@ function loadMonth() {
 }
 
 function load() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    data = JSON.parse(saved);
-  }
-  loadMonth();
+  // Önce Firebase'den yükle
+  db.ref("maas").once("value").then(snap => {
+    const fbData = snap.val();
+    if (fbData && fbData.aylar) {
+      data = fbData;
+      console.log("Firebase'den yüklendi");
+    } else {
+      // Firebase boşsa localStorage'dan yükle
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        data = JSON.parse(saved);
+        console.log("localStorage'dan yüklendi");
+      }
+    }
+    loadMonth();
+  }).catch(e => {
+    console.error("Firebase yükleme hatası:", e);
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) data = JSON.parse(saved);
+    loadMonth();
+  });
 }
 
 // Cadde güncel liste
@@ -421,6 +437,8 @@ const caddeInit = [
 
 function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  // Firebase'e de kaydet
+  db.ref("maas").set(data).catch(e => console.error("Firebase kayıt hatası:", e));
 }
 
 function calc(p) {
