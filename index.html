@@ -249,7 +249,7 @@ function deletePerson(id) {
     <p></p>
   </div>
   <div>
-    <button onclick="exportData()">PDF İndir</button>
+    <button onclick="exportData()">Görüntüle</button>
   </div>
 </div>
 
@@ -1008,7 +1008,9 @@ function exportData() {
       margin: { left: 4, right: 4, top: 15, bottom: 8 }
     });
     
-    doc.save("Maas_" + title.replace(/\s+/g, "_") + "_" + ay + ".pdf");
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
   }
 }
 
