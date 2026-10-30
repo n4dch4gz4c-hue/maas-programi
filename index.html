@@ -180,11 +180,66 @@ input.formula {
   th, td { padding: 6px 4px; }
 }
 </style>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">
+function deletePerson(id) {
+  if (!confirm("Bu kişiyi silmek istediğine emin misin?")) return;
+  const ay = getCurrentMonth();
+  if (data.aylar[ay]) {
+    data.aylar[ay].personeller = data.aylar[ay].personeller.filter(p => p.id != id);
+    save();
+    renderTable();
+  }
+}
+
+</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js">
+function deletePerson(id) {
+  if (!confirm("Bu kişiyi silmek istediğine emin misin?")) return;
+  const ay = getCurrentMonth();
+  if (data.aylar[ay]) {
+    data.aylar[ay].personeller = data.aylar[ay].personeller.filter(p => p.id != id);
+    save();
+    renderTable();
+  }
+}
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js">
+function deletePerson(id) {
+  if (!confirm("Bu kişiyi silmek istediğine emin misin?")) return;
+  const ay = getCurrentMonth();
+  if (data.aylar[ay]) {
+    data.aylar[ay].personeller = data.aylar[ay].personeller.filter(p => p.id != id);
+    save();
+    renderTable();
+  }
+}
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js">
+function deletePerson(id) {
+  if (!confirm("Bu kişiyi silmek istediğine emin misin?")) return;
+  const ay = getCurrentMonth();
+  if (data.aylar[ay]) {
+    data.aylar[ay].personeller = data.aylar[ay].personeller.filter(p => p.id != id);
+    save();
+    renderTable();
+  }
+}
+
+</script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js">
+function deletePerson(id) {
+  if (!confirm("Bu kişiyi silmek istediğine emin misin?")) return;
+  const ay = getCurrentMonth();
+  if (data.aylar[ay]) {
+    data.aylar[ay].personeller = data.aylar[ay].personeller.filter(p => p.id != id);
+    save();
+    renderTable();
+  }
+}
+
+</script>
 </head>
 <body>
 
@@ -363,7 +418,7 @@ const cengelInit = [
 ].map(ad => ({ad, maas:0, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0}));
 
 const kadikoyInit = [
-  "ÖZAY ALŞAN","ABDULKADİR AKYÜZ","MUHAMMED AKYÜZ","SEDAT KIZILKAYA","MAHMUT TEKER","İSRAFİL ÖZTÜRK","CAFER KOCA","İSA AKYILDIZ","MUHSİN IŞIK","RAMAZAN KURAL","RAMAZAN UZUNALP","GÜRKAN EYÜPOĞLU","VEDAT ÖZTÜRK","BİLAL DENERİ","VEPA","GÖKHAN YEŞİLBAŞ","EREN YILMAZ","MURAT KAYA","MUHSİN ÖZMERT","EMİRHAN KANDEMİR","RIZVAN FINDIK","K. ENDER KIZILKAYA","ERAY SOFUOĞLU","FURKAN ARDA","İBRAHİM KARAMAN","YİĞİT ASLANGRİ","TUNCAY ÇAĞLAYAN","ABDULSAMET SEYAR","BATUHAN SEYAR","ALİ BİNGÖL","ALTAN BULUT","YASİN TERCANL","İSMAİL YAZICI","EMİR ÇAPAR","TAHSIN CERAN","MUHAMMED ONUR SAMUR","İSMAİL BURAK AKYOL"
+  "ÖZAY ALŞAN","ABDULKADİR AKYÜZ","MUHAMMED AKYÜZ","SEDAT KIZILKAYA","MAHMUT TEKER","İSRAFİL ÖZTÜRK","CAFER KOCA","İSA AKYILDIZ","MUHSİN IŞIK","RAMAZAN KURAL","RAMAZAN UZUNALP","GÜRKAN EYÜPOĞLU","VEDAT ÖZTÜRK","BİLAL DENERİ","VEPA","GÖKHAN YEŞİLBAŞ","EREN YILMAZ","İSMAİL ALBAYRAK","MURAT KAYA","MUHSİN ÖZMERT","EMİRHAN KANDEMİR","AZAT ASLANGRİ","RIZVAN FINDIK","K. ENDER KIZILKAYA","ERAY SOFUOĞLU","FURKAN ARDA","FERAT GÜNDÜZ","İBRAHİM KARAMAN","YİĞİT ASLANGRİ","TUNCAY ÇAĞLAYAN","ABDULSAMET SEYAR","BATUHAN SEYAR","ALİ BİNGÖL","ALTAN BULUT","YASİN TERCANL","İSMAİL YAZICI","EMİR ÇAPAR","OĞUZHAN ÇAVUSOĞLU","TAHSIN CERAN","MUHAMMED ONUR SAMUR","İSMAİL BURAK AKYOL"
 ].map(ad => ({ad, maas:0, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0}));
 
 const caddeInit = [
@@ -979,6 +1034,17 @@ function importData() {
 }
 
 load();
+
+function deletePerson(id) {
+  if (!confirm("Bu kişiyi silmek istediğine emin misin?")) return;
+  const ay = getCurrentMonth();
+  if (data.aylar[ay]) {
+    data.aylar[ay].personeller = data.aylar[ay].personeller.filter(p => p.id != id);
+    save();
+    renderTable();
+  }
+}
+
 </script>
 </body>
 </html>
