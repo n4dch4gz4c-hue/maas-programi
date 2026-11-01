@@ -180,66 +180,11 @@ input.formula {
   th, td { padding: 6px 4px; }
 }
 </style>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js">
-function deletePerson(id) {
-  if (!confirm("Bu kişiyi silmek istediğine emin misin?")) return;
-  const ay = getCurrentMonth();
-  if (data.aylar[ay]) {
-    data.aylar[ay].personeller = data.aylar[ay].personeller.filter(p => p.id != id);
-    save();
-    renderTable();
-  }
-}
-
-</script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js">
-function deletePerson(id) {
-  if (!confirm("Bu kişiyi silmek istediğine emin misin?")) return;
-  const ay = getCurrentMonth();
-  if (data.aylar[ay]) {
-    data.aylar[ay].personeller = data.aylar[ay].personeller.filter(p => p.id != id);
-    save();
-    renderTable();
-  }
-}
-
-</script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js">
-function deletePerson(id) {
-  if (!confirm("Bu kişiyi silmek istediğine emin misin?")) return;
-  const ay = getCurrentMonth();
-  if (data.aylar[ay]) {
-    data.aylar[ay].personeller = data.aylar[ay].personeller.filter(p => p.id != id);
-    save();
-    renderTable();
-  }
-}
-
-</script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js">
-function deletePerson(id) {
-  if (!confirm("Bu kişiyi silmek istediğine emin misin?")) return;
-  const ay = getCurrentMonth();
-  if (data.aylar[ay]) {
-    data.aylar[ay].personeller = data.aylar[ay].personeller.filter(p => p.id != id);
-    save();
-    renderTable();
-  }
-}
-
-</script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js">
-function deletePerson(id) {
-  if (!confirm("Bu kişiyi silmek istediğine emin misin?")) return;
-  const ay = getCurrentMonth();
-  if (data.aylar[ay]) {
-    data.aylar[ay].personeller = data.aylar[ay].personeller.filter(p => p.id != id);
-    save();
-    renderTable();
-  }
-}
-
-</script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 
@@ -350,7 +295,7 @@ const db = firebase.database();
 const STORAGE_KEY = 'cadde_maas_v2';
 
 let data = {
-  subeler: ['Cadde', 'Kadıköy', 'Çengelköy', 'Taksim Pide', 'Taksim Büfe'],
+  subeler: ['Cadde', 'Kadıköy', 'Çengelöy', 'Taksim Pide', 'Taksim Büfe'],
   aylar: {}
 };
 
@@ -368,13 +313,13 @@ function loadMonth() {
     }
   }
   // Yeni şubeleri ve personelleri ekle
-  const required = ['Cadde', 'Kadıköy', 'Çengelköy', 'Taksim Pide', 'Taksim Büfe'];
+  const required = ['Cadde', 'Kadıköy', 'Çengelöy', 'Taksim Pide', 'Taksim Büfe'];
   required.forEach(s => {
     if (!data.subeler.includes(s)) data.subeler.push(s);
   });
   cengelInit.forEach(p => {
-    if (!data.aylar[ay].personeller.find(x => x.ad === p.ad && x.sube === 'Çengelköy')) {
-      data.aylar[ay].personeller.push({...p, sube: 'Çengelköy', id: Date.now() + Math.random()});
+    if (!data.aylar[ay].personeller.find(x => x.ad === p.ad && x.sube === 'Çengelöy')) {
+      data.aylar[ay].personeller.push({...p, sube: 'Çengelöy', id: Date.now() + Math.random()});
     }
   });
   kadikoyInit.forEach(p => {
@@ -388,27 +333,32 @@ function loadMonth() {
   renderSubeList();
 }
 
+let isInitialLoad = true;
+
 function load() {
-  // Önce Firebase'den yükle
-  db.ref("maas").once("value").then(snap => {
+  db.ref("maas").on("value", snap => {
     const fbData = snap.val();
     if (fbData && fbData.aylar) {
       data = fbData;
-      console.log("Firebase'den yüklendi");
-    } else {
-      // Firebase boşsa localStorage'dan yükle
+      console.log("Firebase anlık güncellendi");
+    } else if (isInitialLoad) {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         data = JSON.parse(saved);
         console.log("localStorage'dan yüklendi");
       }
     }
-    loadMonth();
-  }).catch(e => {
-    console.error("Firebase yükleme hatası:", e);
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) data = JSON.parse(saved);
-    loadMonth();
+    isInitialLoad = false;
+    updateSubeSelect();
+    renderTable();
+    renderSubeList();
+  }, err => {
+    console.error("Firebase dinleme hatası:", err);
+    if (isInitialLoad) {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) data = JSON.parse(saved);
+      loadMonth();
+    }
   });
 }
 
@@ -539,12 +489,9 @@ function renderTable() {
   const search = (document.getElementById('searchName')?.value || '').trim();
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = '';
-  let list = [];
   const ay = getCurrentMonth();
   const personeller = data.aylar[ay]?.personeller || [];
-  if (filter) {
-    list = personeller.filter(p => p.sube === filter);
-  }
+  let list = filter ? personeller.filter(p => p.sube === filter) : [...personeller];
   if (search) {
     list = list.filter(p => isSimilar(p.ad || '', search));
   }
@@ -721,24 +668,26 @@ function syncDevamsizlik() {
   }
   const ay = getCurrentMonth();
   db.ref("mesai/" + sube).once("value").then(snap => {
-    const dataMesai = snap.val() || {};
-    const list = dataMesai.devamsizlik || [];
-    if (list.length === 0) {
-      alert(sube + ' için devamsızlık kaydı yok.');
-      return;
-    }
+    const mesai = snap.val() || {};
     let updated = 0;
-    list.forEach(d => {
-      const p = data.aylar[ay].personeller.find(x => x.ad === d.kisi && x.sube === sube);
-      if (p) {
-        p.gun = d.gun || 0;
-        updated++;
+    data.aylar[ay].personeller.forEach(p => {
+      if (p.sube !== sube) return;
+      const norm = normalize(p.ad);
+      for (const key in mesai) {
+        if (normalize(key) === norm || isSimilar(key, p.ad)) {
+          const gun = mesai[key].devamsizlik || mesai[key].gun || 0;
+          if (gun && p.gun !== gun) {
+            p.gun = gun;
+            updated++;
+          }
+          break;
+        }
       }
     });
     save();
     renderTable();
-    alert(sube + ' şubesinde ' + updated + ' kişinin devamsızlığı güncellendi');
-  }).catch(e => alert('Hata: ' + e.message));
+    alert(updated + " kişinin devamsızlığı güncellendi");
+  }).catch(e => alert("Devamsızlık çekilemedi: " + e.message));
 }
 
 function syncCeza() {
@@ -749,280 +698,190 @@ function syncCeza() {
   }
   const ay = getCurrentMonth();
   db.ref("mesai/" + sube).once("value").then(snap => {
-    const dataMesai = snap.val() || {};
-    const list = dataMesai.cezalar || [];
-    if (list.length === 0) {
-      alert(sube + ' için ceza kaydı yok.');
-      return;
-    }
+    const mesai = snap.val() || {};
     let updated = 0;
-    list.forEach(c => {
-      const p = data.aylar[ay].personeller.find(x => x.ad === c.kisi && x.sube === sube);
-      if (p) {
-        p.ceza = c.tutar || 0;
-        updated++;
+    data.aylar[ay].personeller.forEach(p => {
+      if (p.sube !== sube) return;
+      const norm = normalize(p.ad);
+      for (const key in mesai) {
+        if (normalize(key) === norm || isSimilar(key, p.ad)) {
+          const ceza = mesai[key].ceza || 0;
+          if (ceza && p.ceza !== ceza) {
+            p.ceza = ceza;
+            updated++;
+          }
+          break;
+        }
       }
     });
     save();
     renderTable();
-    alert(sube + ' şubesinde ' + updated + ' kişinin cezası güncellendi');
-  }).catch(e => alert('Hata: ' + e.message));
+    alert(updated + " kişinin cezası güncellendi");
+  }).catch(e => alert("Ceza çekilemedi: " + e.message));
 }
 
 function arsivle() {
   const ay = getCurrentMonth();
-  if (!data.aylar[ay]) return;
   if (!confirm(ay + ' ayını arşivleyip yeni ay başlatılsın mı?')) return;
-  
-  // Mark as archived
-  data.aylar[ay].arsiv = true;
-  
-  // Create next month
+  if (data.aylar[ay]) data.aylar[ay].arsiv = true;
+  // Yeni ay oluştur (sonraki ay)
   const [y, m] = ay.split('-').map(Number);
-  const next = new Date(y, m, 1);
-  const nextAy = next.getFullYear() + '-' + String(next.getMonth() + 1).padStart(2, '0');
-  
-  if (!data.aylar[nextAy]) {
-    data.aylar[nextAy] = { 
-      personeller: data.aylar[ay].personeller.map(p => ({...p, id: Date.now() + Math.random(), gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0}))
-    };
+  const next = m === 12 ? `${y+1}-01` : `${y}-${String(m+1).padStart(2,'0')}`;
+  if (!data.aylar[next]) {
+    data.aylar[next] = { personeller: data.aylar[ay].personeller.map(p => ({...p, gun:0, avans:0, ceza:0})) };
   }
-  
-  // Update select
-  const sel = document.getElementById('filterAy');
-  if (!Array.from(sel.options).some(o => o.value === nextAy)) {
-    const opt = document.createElement('option');
-    opt.value = nextAy;
-    opt.textContent = next.toLocaleDateString('tr-TR', {month:'long', year:'numeric'});
-    sel.insertBefore(opt, sel.firstChild);
-  }
-  sel.value = nextAy;
-  
   save();
+  document.getElementById('filterAy').value = next;
   loadMonth();
-  alert(ay + ' arşivlendi. Yeni ay: ' + nextAy);
+  alert('Arşivlendi. Yeni ay açıldı.');
+}
+
+function showTab(tab) {
+  ['bordro','ozet','arsiv','subeler'].forEach(t => {
+    const el = document.getElementById('tab-' + t);
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  if (tab === 'arsiv') renderArsiv();
+  if (tab === 'ozet') renderSummary();
+}
+
+function renderSummary() {
+  const grid = document.getElementById('summaryGrid');
+  if (!grid) return;
+  const ay = getCurrentMonth();
+  const personeller = data.aylar[ay]?.personeller || [];
+  const bySube = {};
+  personeller.forEach(p => {
+    if (!bySube[p.sube]) bySube[p.sube] = {count:0, maas:0, hakedis:0};
+    bySube[p.sube].count++;
+    bySube[p.sube].maas += p.maas||0;
+    bySube[p.sube].hakedis += calc(p).hakedis;
+  });
+  grid.innerHTML = Object.keys(bySube).map(s => `
+    <div class="summary-card">
+      <h3>${s}</h3>
+      <div class="value">${bySube[s].count} kişi</div>
+      <div>Maaş: ${format(bySube[s].maas)}</div>
+      <div>Hakediş: ${format(bySube[s].hakedis)}</div>
+    </div>
+  `).join('');
 }
 
 function renderArsiv() {
-  const div = document.getElementById('arsivList');
-  const filter = document.getElementById('filterSube').value;
-  const arsivler = Object.keys(data.aylar).filter(a => data.aylar[a].arsiv);
-  if (arsivler.length === 0) {
-    div.innerHTML = '<p>Henüz arşivlenmiş ay yok.</p>';
-    return;
-  }
-  div.innerHTML = arsivler.map(a => {
+  const list = document.getElementById('arsivList');
+  if (!list) return;
+  const aylar = Object.keys(data.aylar || {}).sort().reverse();
+  list.innerHTML = aylar.map(a => {
+    const filter = document.getElementById('filterSube').value;
     let list = data.aylar[a].personeller || [];
     if (filter) list = list.filter(p => p.sube === filter);
     let hak = 0;
     list.forEach(p => hak += calc(p).hakedis);
     return `<div style="margin:10px 0;padding:12px;background:#f8f9fa;border-radius:8px;">
       <b>${a}</b> ${filter ? '(' + filter + ')' : ''} — ${list.length} kişi — Hakediş: ${format(hak)}
-      <button onclick="goruntuleArsiv('${a}')" style="margin-left:10px;">Görüntüle</button>
+      ${data.aylar[a].arsiv ? '<span style="color:green;"> (Arşivlendi)</span>' : ''}
     </div>`;
-  }).join('');
-}
-
-function goruntuleArsiv(ay) {
-  const filter = document.getElementById('filterSube').value;
-  const personeller = data.aylar[ay]?.personeller || [];
-  const list = filter ? personeller.filter(p => p.sube === filter) : personeller;
-  if (!list.length) {
-    alert('Bu arşivde veri yok');
-    return;
-  }
-  // Temporarily set month and call export
-  const oldAy = document.getElementById('filterAy').value;
-  document.getElementById('filterAy').value = ay;
-  exportData();
-  document.getElementById('filterAy').value = oldAy;
+  }).join('') || '<p>Henüz arşiv yok.</p>';
 }
 
 function renderSubeList() {
   const ul = document.getElementById('subeList');
-  ul.innerHTML = data.subeler.map(s => `<li>${s} <button onclick="removeSube('${s}')" style="padding:2px 8px;font-size:12px;" class="danger">Sil</button></li>`).join('');
+  if (!ul) return;
+  ul.innerHTML = data.subeler.map(s => `<li>${s} <button class="danger" onclick="deleteSube('${s}')" style="padding:2px 8px;font-size:12px;">Sil</button></li>`).join('');
 }
 
-function removeSube(name) {
+function deleteSube(name) {
   if (confirm(`"${name}" şubesini silmek istediğinize emin misiniz?`)) {
     data.subeler = data.subeler.filter(s => s !== name);
-    data.aylar[getCurrentMonth()].personeller.forEach(p => { if (p.sube === name) p.sube = data.subeler[0] || ''; });
     save();
     updateSubeSelect();
     renderSubeList();
-    renderTable();
   }
 }
 
-function renderSummary() {
-  const grid = document.getElementById('summaryGrid');
-  let html = '';
-  data.subeler.forEach(s => {
-    const list = data.aylar[getCurrentMonth()]?.personeller.filter(p => p.sube === s) || [];
-    let maas=0, hak=0;
-    list.forEach(p => {
-      const c = calc(p);
-      maas += p.maas||0;
-      hak += c.hakedis;
-    });
-    html += `<div class="summary-card">
-      <h3>${s}</h3>
-      <div>${list.length} personel</div>
-      <div class="value">${format(hak)}</div>
-      <div style="font-size:13px;color:#666;">Maaş: ${format(maas)}</div>
-    </div>`;
-  });
-  // Genel
-  let gMaas=0, gHak=0;
-  const personeller = data.aylar[getCurrentMonth()]?.personeller || [];
-  personeller.forEach(p => {
-    gMaas += p.maas||0;
-    gHak += calc(p).hakedis;
-  });
-  html += `<div class="summary-card" style="border-left-color:#1F4E79;">
-    <h3>GENEL TOPLAM</h3>
-    <div>${personeller.length} personel</div>
-    <div class="value">${format(gHak)}</div>
-    <div style="font-size:13px;color:#666;">Maaş: ${format(gMaas)}</div>
-  </div>`;
-  grid.innerHTML = html;
-}
-
-function showTab(name) {
-  document.getElementById('tab-bordro').style.display = name==='bordro'?'block':'none';
-  document.getElementById('tab-ozet').style.display = name==='ozet'?'block':'none';
-  document.getElementById('tab-subeler').style.display = name==='subeler'?'block':'none';
-  document.getElementById('tab-arsiv').style.display = name==='arsiv'?'block':'none';
-  document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
-  if (name==='ozet') renderSummary();
-  if (name==='subeler') renderSubeList();
-  if (name==='arsiv') renderArsiv();
-}
-
-function exportData() {
-  const filter = document.getElementById('filterSube').value;
+async function exportData() {
   const ay = getCurrentMonth();
+  const filter = document.getElementById('filterSube').value;
   const personeller = data.aylar[ay]?.personeller || [];
-  const list = filter ? personeller.filter(p => p.sube === filter) : personeller;
-  const title = filter || "Tüm Şubeler";
-  
-  if (!list.length) {
-    alert('Önce şube seçin ve liste yüklensin');
-    return;
-  }
+  let list = filter ? personeller.filter(p => p.sube === filter) : [...personeller];
 
-  const fontUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Regular.ttf';
-  const fontBoldUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto/Roboto-Medium.ttf';
-  
-  Promise.all([
-    fetch(fontUrl).then(r => r.arrayBuffer()),
-    fetch(fontBoldUrl).then(r => r.arrayBuffer())
-  ]).then(([buf, bufBold]) => {
-    const toBase64 = (buffer) => {
-      const bytes = new Uint8Array(buffer);
-      let binary = '';
-      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-      return btoa(binary);
-    };
-    generatePDF(toBase64(buf), toBase64(bufBold));
-  }).catch(() => generatePDF(null, null));
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation: 'landscape', unit: 'mm', format: 'a4'});
 
-  function generatePDF(fontBase64, fontBoldBase64) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-    
-    if (fontBase64) {
-      doc.addFileToVFS('Roboto-Regular.ttf', fontBase64);
-      doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-      if (fontBoldBase64) {
-        doc.addFileToVFS('Roboto-Medium.ttf', fontBoldBase64);
-        doc.addFont('Roboto-Medium.ttf', 'Roboto', 'bold');
-      }
-      doc.setFont('Roboto');
-    }
-    
-    doc.setFillColor(31, 78, 121);
-    doc.rect(0, 0, 297, 12, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(11);
-    doc.text("Maaş Programı - " + title + "  |  " + ay, 8, 8);
-    
-    const headers = [["Sıra", "Ad Soyad", "Maaş", "Gün", "Devamsızlık", "Avans", "Ceza", "BES", "Haciz", "Borç", "Toplam", "Hakediş"]];
-    const body = list.map((p, idx) => {
-      const c = calc(p);
-      return [
-        idx + 1,
-        p.ad || "",
-        (p.maas || 0).toLocaleString("tr-TR"),
-        p.gun || 0,
-        c.dev.toLocaleString("tr-TR"),
-        (p.avans || 0).toLocaleString("tr-TR"),
-        (p.ceza || 0).toLocaleString("tr-TR"),
-        (p.bes || 0).toLocaleString("tr-TR"),
-        (p.haciz || 0).toLocaleString("tr-TR"),
-        (p.borc || 0).toLocaleString("tr-TR"),
-        c.toplam.toLocaleString("tr-TR"),
-        c.hakedis.toLocaleString("tr-TR")
-      ];
-    });
-    
-    let sumMaas=0, sumDev=0, sumAv=0, sumCeza=0, sumBes=0, sumHaciz=0, sumBorc=0, sumTop=0, sumHak=0;
-    list.forEach(p => {
-      const c = calc(p);
-      sumMaas += p.maas||0; sumDev += c.dev; sumAv += p.avans||0;
-      sumCeza += p.ceza||0; sumBes += p.bes||0; sumHaciz += p.haciz||0;
-      sumBorc += p.borc||0; sumTop += c.toplam; sumHak += c.hakedis;
-    });
-    const foot = [["", "TOPLAM", sumMaas.toLocaleString("tr-TR"), "", sumDev.toLocaleString("tr-TR"), sumAv.toLocaleString("tr-TR"), sumCeza.toLocaleString("tr-TR"), sumBes.toLocaleString("tr-TR"), sumHaciz.toLocaleString("tr-TR"), sumBorc.toLocaleString("tr-TR"), sumTop.toLocaleString("tr-TR"), sumHak.toLocaleString("tr-TR")]];
-    
-    doc.autoTable({
-      head: headers,
-      body: body,
-      foot: foot,
-      startY: 15,
-      styles: { 
-        font: fontBase64 ? "Roboto" : "helvetica",
-        fontSize: 6.5, 
-        cellPadding: 1,
-        textColor: [30, 30, 30],
-        lineColor: [200, 200, 200],
-        lineWidth: 0.1
-      },
-      headStyles: { 
-        fillColor: [31, 78, 121], 
-        textColor: 255,
-        fontStyle: "bold",
-        halign: "center",
-        fontSize: 6.5
-      },
-      footStyles: { 
-        fillColor: [31, 78, 121], 
-        textColor: 255,
-        fontStyle: "bold"
-      },
-      alternateRowStyles: { fillColor: [245, 247, 250] },
-      columnStyles: {
-        0: { halign: "center", cellWidth: 12 },
-        1: { halign: "left", cellWidth: 50 },
-        2: { halign: "right", cellWidth: 20 },
-        3: { halign: "center", cellWidth: 14 },
-        4: { halign: "right", cellWidth: 22 },
-        5: { halign: "right", cellWidth: 18 },
-        6: { halign: "right", cellWidth: 18 },
-        7: { halign: "right", cellWidth: 18 },
-        8: { halign: "right", cellWidth: 18 },
-        9: { halign: "right", cellWidth: 18 },
-        10: { halign: "right", cellWidth: 22 },
-        11: { halign: "right", cellWidth: 22, fontStyle: "bold" }
-      },
-      margin: { left: 4, right: 4, top: 15, bottom: 8 }
-    });
-    
-    const blob = doc.output('blob');
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
-  }
+  // Font yükle (basit)
+  let fontBase64 = null;
+  try {
+    // Roboto yoksa helvetica kullan
+  } catch(e) {}
+
+  const headers = [['Sıra', 'Ad Soyad', 'Maaş', 'Gün', 'Devamsızlık', 'Avans', 'Ceza', 'BES', 'Haciz', 'Borç', 'Toplam Kesinti', 'Hakediş']];
+  const body = [];
+  let sumMaas=0, sumDev=0, sumAv=0, sumCeza=0, sumBes=0, sumHaciz=0, sumBorc=0, sumTop=0, sumHak=0;
+
+  list.forEach((p, i) => {
+    const c = calc(p);
+    sumMaas += p.maas||0; sumDev += c.dev; sumAv += p.avans||0;
+    sumCeza += p.ceza||0; sumBes += p.bes||0; sumHaciz += p.haciz||0;
+    sumBorc += p.borc||0; sumTop += c.toplam; sumHak += c.hakedis;
+    body.push([
+      i+1, p.ad||'', (p.maas||0).toLocaleString('tr-TR'), p.gun||0,
+      c.dev.toLocaleString('tr-TR'), (p.avans||0).toLocaleString('tr-TR'),
+      (p.ceza||0).toLocaleString('tr-TR'), (p.bes||0).toLocaleString('tr-TR'),
+      (p.haciz||0).toLocaleString('tr-TR'), (p.borc||0).toLocaleString('tr-TR'),
+      c.toplam.toLocaleString('tr-TR'), c.hakedis.toLocaleString('tr-TR')
+    ]);
+  });
+
+  const foot = [['', 'TOPLAM', sumMaas.toLocaleString('tr-TR'), '', sumDev.toLocaleString('tr-TR'), sumAv.toLocaleString('tr-TR'), sumCeza.toLocaleString('tr-TR'), sumBes.toLocaleString('tr-TR'), sumHaciz.toLocaleString('tr-TR'), sumBorc.toLocaleString('tr-TR'), sumTop.toLocaleString('tr-TR'), sumHak.toLocaleString('tr-TR')]];
+
+  doc.autoTable({
+    head: headers,
+    body: body,
+    foot: foot,
+    startY: 15,
+    styles: { 
+      font: fontBase64 ? "Roboto" : "helvetica",
+      fontSize: 6.5, 
+      cellPadding: 1,
+      textColor: [30, 30, 30],
+      lineColor: [200, 200, 200],
+      lineWidth: 0.1
+    },
+    headStyles: { 
+      fillColor: [31, 78, 121], 
+      textColor: 255,
+      fontStyle: "bold",
+      halign: "center",
+      fontSize: 6.5
+    },
+    footStyles: { 
+      fillColor: [31, 78, 121], 
+      textColor: 255,
+      fontStyle: "bold"
+    },
+    alternateRowStyles: { fillColor: [245, 247, 250] },
+    columnStyles: {
+      0: { halign: "center", cellWidth: 12 },
+      1: { halign: "left", cellWidth: 50 },
+      2: { halign: "right", cellWidth: 20 },
+      3: { halign: "center", cellWidth: 14 },
+      4: { halign: "right", cellWidth: 22 },
+      5: { halign: "right", cellWidth: 18 },
+      6: { halign: "right", cellWidth: 18 },
+      7: { halign: "right", cellWidth: 18 },
+      8: { halign: "right", cellWidth: 18 },
+      9: { halign: "right", cellWidth: 18 },
+      10: { halign: "right", cellWidth: 22 },
+      11: { halign: "right", cellWidth: 22, fontStyle: "bold" }
+    },
+    margin: { left: 4, right: 4, top: 15, bottom: 8 }
+  });
+
+  const blob = doc.output('blob');
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
 }
 
 function importData() {
