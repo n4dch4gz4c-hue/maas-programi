@@ -333,14 +333,12 @@ function getCurrentMonth() {
 function loadMonth() {
   const ay = getCurrentMonth();
   if (!data.aylar) data.aylar = {};
-  if (!data.aylar.current || !data.aylar.current.personeller || data.aylar.current.personeller.length === 0) {
-    // Eski Ekim verisini current'a taşı
-    if (data.aylar["2026-10"] && data.aylar["2026-10"].personeller) {
-      data.aylar.current = JSON.parse(JSON.stringify(data.aylar["2026-10"]));
-      save(); // hemen kaydet
-    } else {
-      data.aylar.current = { personeller: [] };
-    }
+  if (!data.aylar.current) data.aylar.current = { personeller: [] };
+  if (!data.aylar.current.personeller) data.aylar.current.personeller = [];
+  // Sadece tamamen boşsa eski veriyi taşı
+  if (data.aylar.current.personeller.length === 0 && data.aylar["2026-10"] && data.aylar["2026-10"].personeller && data.aylar["2026-10"].personeller.length > 0) {
+    data.aylar.current = JSON.parse(JSON.stringify(data.aylar["2026-10"]));
+    save();
   }
   // Yanlış şubeyi temizle
   if (data.subeler) {
@@ -388,12 +386,14 @@ function load() {
       const ay = getCurrentMonth();
       const remoteCount = fbData.aylar[ay]?.personeller?.length || 0;
       const localCount = data.aylar[ay]?.personeller?.length || 0;
-      // Uzaktan gelen daha azsa (veya boşsa) üzerine yazma
-      if (remoteCount >= localCount || isInitialLoad) {
+      // Sadece başlangıçta veya remote daha fazla veri varsa al (kaybolmayı önle)
+      if (isInitialLoad || (remoteCount > localCount && remoteCount > 0)) {
         data = fbData;
         console.log("Firebase anlık güncellendi");
+      } else if (remoteCount === 0 && localCount > 0) {
+        console.log("Remote boş, yerel veri korundu");
       } else {
-        console.log("Yerel veri daha güncel, Firebase üzerine yazılmadı");
+        console.log("Yerel veri korundu");
       }
     } else if (isInitialLoad) {
       const saved = localStorage.getItem(STORAGE_KEY);
