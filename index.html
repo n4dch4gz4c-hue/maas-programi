@@ -903,20 +903,30 @@ let viewingArchive = null;
 function viewArsiv(name) {
   const arsiv = data.arsivler?.[name];
   if (!arsiv || !arsiv.personeller) return alert('Arşiv bulunamadı veya boş');
-  viewingArchive = JSON.parse(JSON.stringify(data.aylar.current || {personeller:[]}));
-  data.aylar.current = JSON.parse(JSON.stringify(arsiv));
-  showTab('bordro');
-  renderTable();
-  // Banner
-  let banner = document.getElementById('archiveBanner');
-  if (!banner) {
-    banner = document.createElement('div');
-    banner.id = 'archiveBanner';
-    banner.style.cssText = 'background:#fff3cd;color:#856404;padding:10px 16px;border-radius:8px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;';
-    document.querySelector('#tab-bordro .controls').before(banner);
-  }
-  banner.innerHTML = `<span><b>${name}</b> arşivi görüntüleniyor (sadece okuma).</span> <button onclick="exitArchive()" style="padding:6px 12px;">Geri Dön</button>`;
-  banner.style.display = 'flex';
+  const list = arsiv.personeller || [];
+  const container = document.getElementById('arsivList');
+  let html = `<div style="margin-bottom:16px;"><button onclick="renderArsiv()" style="padding:8px 14px;">← Geri</button> <b style="margin-left:12px;">${name}</b> (${list.length} kişi)</div>`;
+  html += '<div style="overflow-x:auto;"><table style="width:100%;font-size:12px;border-collapse:collapse;">';
+  html += '<tr style="background:#1F4E79;color:white;"><th>Sıra</th><th>Ad Soyad</th><th>Maaş</th><th>Gün</th><th>Devamsızlık</th><th>Avans</th><th>Ceza</th><th>BES</th><th>Haciz</th><th>Borç</th><th>Toplam</th><th>Hakediş</th></tr>';
+  list.forEach((p, i) => {
+    const c = calc(p);
+    html += `<tr style="background:${i%2===0?'#fafbff':'white'};">
+      <td style="text-align:center;padding:6px;">${i+1}</td>
+      <td style="text-align:left;padding:6px;">${p.ad||''}</td>
+      <td style="text-align:right;padding:6px;">${(p.maas||0).toLocaleString('tr-TR')}</td>
+      <td style="text-align:center;padding:6px;">${p.gun||0}</td>
+      <td style="text-align:right;padding:6px;">${c.dev.toLocaleString('tr-TR')}</td>
+      <td style="text-align:right;padding:6px;">${(p.avans||0).toLocaleString('tr-TR')}</td>
+      <td style="text-align:right;padding:6px;">${(p.ceza||0).toLocaleString('tr-TR')}</td>
+      <td style="text-align:right;padding:6px;">${(p.bes||0).toLocaleString('tr-TR')}</td>
+      <td style="text-align:right;padding:6px;">${(p.haciz||0).toLocaleString('tr-TR')}</td>
+      <td style="text-align:right;padding:6px;">${(p.borc||0).toLocaleString('tr-TR')}</td>
+      <td style="text-align:right;padding:6px;">${c.toplam.toLocaleString('tr-TR')}</td>
+      <td style="text-align:right;padding:6px;font-weight:bold;">${c.hakedis.toLocaleString('tr-TR')}</td>
+    </tr>`;
+  });
+  html += '</table></div>';
+  container.innerHTML = html;
 }
 
 function exitArchive() {
@@ -934,34 +944,58 @@ async function exportArsivPdf(name) {
   const arsiv = data.arsivler?.[name];
   if (!arsiv) return alert('Arşiv bulunamadı');
   const list = arsiv.personeller || [];
+  if (!list.length) return alert('Arşiv boş');
+
+  // Türkçe karakter için html2canvas + 2 sayfa sınırı
+  const temp = document.createElement('div');
+  temp.style.cssText = 'position:absolute;left:-9999px;top:0;background:white;padding:12px;font-family:Arial,Helvetica,sans-serif;width:1100px;';
+  let html = `<h3 style="text-align:center;margin:0 0 10px;font-family:Arial;">${name}</h3>`;
+  html += '<table border="1" cellpadding="3" cellspacing="0" style="border-collapse:collapse;width:100%;font-size:9px;font-family:Arial;">';
+  html += '<tr style="background:#1F4E79;color:white;"><th>Sıra</th><th>Ad Soyad</th><th>Maaş</th><th>Gün</th><th>Devamsızlık</th><th>Avans</th><th>Ceza</th><th>BES</th><th>Haciz</th><th>Borç</th><th>Toplam</th><th>Hakediş</th></tr>';
+  list.forEach((p, i) => {
+    const c = calc(p);
+    html += `<tr>
+      <td style="text-align:center">${i+1}</td>
+      <td>${p.ad||''}</td>
+      <td style="text-align:right">${(p.maas||0).toLocaleString('tr-TR')}</td>
+      <td style="text-align:center">${p.gun||0}</td>
+      <td style="text-align:right">${c.dev.toLocaleString('tr-TR')}</td>
+      <td style="text-align:right">${(p.avans||0).toLocaleString('tr-TR')}</td>
+      <td style="text-align:right">${(p.ceza||0).toLocaleString('tr-TR')}</td>
+      <td style="text-align:right">${(p.bes||0).toLocaleString('tr-TR')}</td>
+      <td style="text-align:right">${(p.haciz||0).toLocaleString('tr-TR')}</td>
+      <td style="text-align:right">${(p.borc||0).toLocaleString('tr-TR')}</td>
+      <td style="text-align:right">${c.toplam.toLocaleString('tr-TR')}</td>
+      <td style="text-align:right;font-weight:bold">${c.hakedis.toLocaleString('tr-TR')}</td>
+    </tr>`;
+  });
+  html += '</table>';
+  temp.innerHTML = html;
+  document.body.appendChild(temp);
+
+  const canvas = await html2canvas(temp, { scale: 1.5, useCORS: true });
+  document.body.removeChild(temp);
 
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({orientation: 'landscape', unit: 'mm', format: 'a4'});
+  const imgData = canvas.toDataURL('image/png');
+  const pageWidth = 287;
+  const pageHeight = 200;
+  const imgWidth = pageWidth;
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-  const headers = [['Sıra', 'Ad Soyad', 'Maaş', 'Gün', 'Devamsızlık', 'Avans', 'Ceza', 'BES', 'Haciz', 'Borç', 'Toplam', 'Hakediş']];
-  const body = [];
-  list.forEach((p, i) => {
-    const c = calc(p);
-    body.push([
-      i+1, p.ad||'', (p.maas||0).toLocaleString('tr-TR'), p.gun||0,
-      c.dev.toLocaleString('tr-TR'), (p.avans||0).toLocaleString('tr-TR'),
-      (p.ceza||0).toLocaleString('tr-TR'), (p.bes||0).toLocaleString('tr-TR'),
-      (p.haciz||0).toLocaleString('tr-TR'), (p.borc||0).toLocaleString('tr-TR'),
-      c.toplam.toLocaleString('tr-TR'), c.hakedis.toLocaleString('tr-TR')
-    ]);
-  });
-
-  doc.setFontSize(14);
-  doc.text(name, 14, 12);
-  doc.autoTable({
-    head: headers,
-    body: body,
-    startY: 18,
-    styles: { fontSize: 7, cellPadding: 1.2 },
-    headStyles: { fillColor: [31, 78, 121], textColor: 255, fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [245, 247, 250] },
-    margin: { left: 10, right: 10 }
-  });
+  let heightLeft = imgHeight;
+  let position = 5;
+  let page = 1;
+  doc.addImage(imgData, 'PNG', 5, position, imgWidth, imgHeight);
+  heightLeft -= pageHeight;
+  while (heightLeft > 0 && page < 2) {
+    position = heightLeft - imgHeight + 5;
+    doc.addPage();
+    doc.addImage(imgData, 'PNG', 5, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+    page++;
+  }
   doc.save(name + '.pdf');
 }
 
