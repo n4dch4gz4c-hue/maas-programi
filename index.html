@@ -902,8 +902,8 @@ let viewingArchive = null;
 
 function viewArsiv(name) {
   const arsiv = data.arsivler?.[name];
-  if (!arsiv) return alert('Arşiv bulunamadı');
-  viewingArchive = JSON.parse(JSON.stringify(data.aylar.current));
+  if (!arsiv || !arsiv.personeller) return alert('Arşiv bulunamadı veya boş');
+  viewingArchive = JSON.parse(JSON.stringify(data.aylar.current || {personeller:[]}));
   data.aylar.current = JSON.parse(JSON.stringify(arsiv));
   showTab('bordro');
   renderTable();
@@ -935,41 +935,33 @@ async function exportArsivPdf(name) {
   if (!arsiv) return alert('Arşiv bulunamadı');
   const list = arsiv.personeller || [];
 
-  // Geçici tablo oluştur (Türkçe karakter için html2canvas)
-  const temp = document.createElement('div');
-  temp.style.cssText = 'position:absolute;left:-9999px;top:0;background:white;padding:20px;font-family:Arial,sans-serif;';
-  let html = `<h2 style="text-align:center;margin:0 0 16px;">${name}</h2><table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;font-size:11px;">`;
-  html += '<tr style="background:#1F4E79;color:white;"><th>Sıra</th><th>Ad Soyad</th><th>Maaş</th><th>Gün</th><th>Devamsızlık</th><th>Avans</th><th>Ceza</th><th>BES</th><th>Haciz</th><th>Borç</th><th>Toplam</th><th>Hakediş</th></tr>';
-  list.forEach((p, i) => {
-    const c = calc(p);
-    html += `<tr>
-      <td style="text-align:center">${i+1}</td>
-      <td>${p.ad||''}</td>
-      <td style="text-align:right">${(p.maas||0).toLocaleString('tr-TR')}</td>
-      <td style="text-align:center">${p.gun||0}</td>
-      <td style="text-align:right">${c.dev.toLocaleString('tr-TR')}</td>
-      <td style="text-align:right">${(p.avans||0).toLocaleString('tr-TR')}</td>
-      <td style="text-align:right">${(p.ceza||0).toLocaleString('tr-TR')}</td>
-      <td style="text-align:right">${(p.bes||0).toLocaleString('tr-TR')}</td>
-      <td style="text-align:right">${(p.haciz||0).toLocaleString('tr-TR')}</td>
-      <td style="text-align:right">${(p.borc||0).toLocaleString('tr-TR')}</td>
-      <td style="text-align:right">${c.toplam.toLocaleString('tr-TR')}</td>
-      <td style="text-align:right;font-weight:bold">${c.hakedis.toLocaleString('tr-TR')}</td>
-    </tr>`;
-  });
-  html += '</table>';
-  temp.innerHTML = html;
-  document.body.appendChild(temp);
-
-  const canvas = await html2canvas(temp, { scale: 2 });
-  document.body.removeChild(temp);
-
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({orientation: 'landscape', unit: 'mm', format: 'a4'});
-  const imgData = canvas.toDataURL('image/png');
-  const imgWidth = 287;
-  const imgHeight = (canvas.height * imgWidth) / canvas.width;
-  doc.addImage(imgData, 'PNG', 5, 5, imgWidth, imgHeight);
+
+  const headers = [['Sıra', 'Ad Soyad', 'Maaş', 'Gün', 'Devamsızlık', 'Avans', 'Ceza', 'BES', 'Haciz', 'Borç', 'Toplam', 'Hakediş']];
+  const body = [];
+  list.forEach((p, i) => {
+    const c = calc(p);
+    body.push([
+      i+1, p.ad||'', (p.maas||0).toLocaleString('tr-TR'), p.gun||0,
+      c.dev.toLocaleString('tr-TR'), (p.avans||0).toLocaleString('tr-TR'),
+      (p.ceza||0).toLocaleString('tr-TR'), (p.bes||0).toLocaleString('tr-TR'),
+      (p.haciz||0).toLocaleString('tr-TR'), (p.borc||0).toLocaleString('tr-TR'),
+      c.toplam.toLocaleString('tr-TR'), c.hakedis.toLocaleString('tr-TR')
+    ]);
+  });
+
+  doc.setFontSize(14);
+  doc.text(name, 14, 12);
+  doc.autoTable({
+    head: headers,
+    body: body,
+    startY: 18,
+    styles: { fontSize: 7, cellPadding: 1.2 },
+    headStyles: { fillColor: [31, 78, 121], textColor: 255, fontStyle: 'bold' },
+    alternateRowStyles: { fillColor: [245, 247, 250] },
+    margin: { left: 10, right: 10 }
+  });
   doc.save(name + '.pdf');
 }
 
