@@ -334,6 +334,7 @@ function loadMonth() {
 }
 
 let isInitialLoad = true;
+let ignoreNextRealtime = false;
 
 function load() {
   db.ref("maas").on("value", snap => {
@@ -349,6 +350,10 @@ function load() {
       }
     }
     isInitialLoad = false;
+    if (ignoreNextRealtime) {
+      ignoreNextRealtime = false;
+      return; // kendi kaydettiğimiz değişikliği yoksay
+    }
     updateSubeSelect();
     renderTable();
     renderSubeList();
@@ -505,6 +510,7 @@ function renderTable() {
     sumBorc += p.borc||0; sumTop += c.toplam; sumHak += c.hakedis;
 
     const tr = document.createElement('tr');
+    tr.dataset.id = p.id;
     tr.innerHTML = `
       <td>${idx + 1}</td>
       <td class="name"><input type="text" value="${p.ad||''}" onchange="updateField('${p.id}','ad',this.value)"></td>
@@ -554,14 +560,65 @@ function renderTable() {
   }
 }
 
+let ignoreNextRealtime = false;
+
 function updateField(id, field, value) {
   const ay = getCurrentMonth();
-  const p = data.aylar[ay].personeller.find(x => x.id == id);
+  const p = data.aylar[ay].personeller.find(x => String(x.id) === String(id));
   if (p) {
     p[field] = value;
+    ignoreNextRealtime = true;
     save();
-    renderTable();
+    // Sadece bu satırın hesaplanan alanlarını güncelle, tabloyu yeniden çizme
+    updateRowCalculations(id);
   }
+}
+
+function updateRowCalculations(id) {
+  const ay = getCurrentMonth();
+  const p = data.aylar[ay].personeller.find(x => String(x.id) === String(id));
+  if (!p) return;
+  const c = calc(p);
+  const tr = document.querySelector(`#tbody tr[data-id="${id}"]`);
+  if (tr) {
+    const formulas = tr.querySelectorAll('input.formula');
+    if (formulas.length >= 3) {
+      formulas[0].value = format(c.dev);
+      formulas[1].value = format(c.toplam);
+      formulas[2].value = format(c.hakedis);
+    }
+  }
+  renderTotalsOnly();
+}
+
+function renderTotalsOnly() {
+  const filter = document.getElementById('filterSube').value;
+  const ay = getCurrentMonth();
+  const personeller = data.aylar[ay]?.personeller || [];
+  let list = filter ? personeller.filter(p => p.sube === filter) : [...personeller];
+  let sumMaas=0, sumDev=0, sumAv=0, sumCeza=0, sumBes=0, sumHaciz=0, sumBorc=0, sumTop=0, sumHak=0;
+  list.forEach(p => {
+    const c = calc(p);
+    sumMaas += p.maas||0; sumDev += c.dev; sumAv += p.avans||0;
+    sumCeza += p.ceza||0; sumBes += p.bes||0; sumHaciz += p.haciz||0;
+    sumBorc += p.borc||0; sumTop += c.toplam; sumHak += c.hakedis;
+  });
+  document.getElementById('totalRow').innerHTML = `
+    <td></td>
+    <td>TOPLAM (${list.length} kişi)</td>
+    <td>${format(sumMaas)}</td>
+    <td></td>
+    <td>${format(sumDev)}</td>
+    <td>${format(sumAv)}</td>
+    <td>${format(sumCeza)}</td>
+    <td>${format(sumBes)}</td>
+    <td>${format(sumHaciz)}</td>
+    <td>${format(sumBorc)}</td>
+    <td>${format(sumTop)}</td>
+    <td>${format(sumHak)}</td>
+    <td></td>
+    <td></td>
+  `;
 }
 
 function importPeople(input){
