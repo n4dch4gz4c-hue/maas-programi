@@ -1089,19 +1089,23 @@ function renderYearly() {
   const dataPoints = [];
 
   months.forEach((m, i) => {
-    const key = `${year}-${m}`;
     let list = [];
-    // Arşivlerden bak
     const arsivler = data.arsivler || {};
+    // Daha akıllı eşleşme
     for (const name in arsivler) {
-      if (name.includes(year) && name.toLowerCase().includes(sube.toLowerCase().slice(0,4))) {
-        list = arsivler[name].personeller || [];
-        break;
+      const n = name.toLowerCase();
+      const s = sube.toLowerCase();
+      if ((n.includes('ekim') && m === '10') || n.includes(year)) {
+        if (n.includes(s) || n.includes(s.slice(0,5))) {
+          list = arsivler[name].personeller || [];
+          break;
+        }
       }
     }
-    // Current de bu aysa ekle
-    if (key === '2026-11' && data.aylar?.current) {
-      list = data.aylar.current.personeller.filter(p => p.sube === sube) || list;
+    // Current (Kasım) için
+    if (m === '11' && data.aylar?.current) {
+      const cur = data.aylar.current.personeller.filter(p => p.sube === sube);
+      if (cur.length) list = cur;
     }
     const maas = list.reduce((s,p) => s + (p.maas||0), 0);
     const hak = list.reduce((s,p) => s + calc(p).hakedis, 0);
@@ -1111,9 +1115,12 @@ function renderYearly() {
   const totalMaas = dataPoints.reduce((s,d) => s + d.maas, 0);
   const totalHak = dataPoints.reduce((s,d) => s + d.hak, 0);
   document.getElementById('yearlySummary').innerHTML = 
-    `<b>${sube} ${year}</b> — Toplam Maaş: ${format(totalMaas)} | Toplam Hakediş: ${format(totalHak)}`;
+    `<div style="background:linear-gradient(135deg,#1F4E79,#2a6cb0);color:white;padding:14px 18px;border-radius:12px;margin-bottom:16px;">
+      <b>${sube} — ${year}</b><br>
+      <span style="font-size:18px;">Toplam Maaş: ${format(totalMaas)}</span> &nbsp;|&nbsp; 
+      <span style="font-size:18px;">Toplam Hakediş: ${format(totalHak)}</span>
+    </div>`;
 
-  // Chart
   const ctx = document.getElementById('yearlyChart');
   if (yearlyChart) yearlyChart.destroy();
   yearlyChart = new Chart(ctx, {
@@ -1123,24 +1130,42 @@ function renderYearly() {
       datasets: [{
         label: 'Hakediş',
         data: dataPoints.map(d => d.hak),
-        backgroundColor: 'rgba(31,78,121,0.75)',
-        borderRadius: 6
+        backgroundColor: dataPoints.map(d => d.hak > 0 ? 'rgba(31,78,121,0.8)' : 'rgba(200,200,200,0.4)'),
+        borderRadius: 8,
+        borderSkipped: false
       }]
     },
     options: {
       responsive: true,
-      plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true, ticks: { callback: v => (v/1000).toFixed(0)+'K' } } }
+      plugins: { 
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => format(ctx.raw) } }
+      },
+      scales: { 
+        y: { beginAtZero: true, ticks: { callback: v => (v/1000).toFixed(0)+'K ₺' } },
+        x: { grid: { display: false } }
+      }
     }
   });
 
-  // Table
   let rows = dataPoints.map(d => 
-    `<tr><td>${d.month}</td><td>${d.count}</td><td>${format(d.maas)}</td><td>${format(d.hak)}</td></tr>`
+    `<tr style="${d.hak>0?'background:#f8f9fa':''}">
+      <td style="text-align:left;padding-left:12px;"><b>${d.month}</b></td>
+      <td>${d.count || '-'}</td>
+      <td>${d.maas ? format(d.maas) : '-'}</td>
+      <td style="font-weight:600;color:#1F4E79">${d.hak ? format(d.hak) : '-'}</td>
+    </tr>`
   ).join('');
   document.getElementById('yearlyTable').innerHTML = `
-    <table style="width:100%; font-size:13px;">
-      <thead><tr style="background:#1F4E79;color:white;"><th>Ay</th><th>Kişi</th><th>Maaş</th><th>Hakediş</th></tr></thead>
+    <table style="width:100%; font-size:13px; border-collapse:collapse;">
+      <thead>
+        <tr style="background:#1F4E79;color:white;">
+          <th style="text-align:left;padding-left:12px;">Ay</th>
+          <th>Kişi</th>
+          <th>Maaş</th>
+          <th>Hakediş</th>
+        </tr>
+      </thead>
       <tbody>${rows}</tbody>
     </table>`;
 }
