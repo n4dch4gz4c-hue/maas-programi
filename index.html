@@ -1103,14 +1103,15 @@ function renderYearly() {
     for (const name in arsivler) {
       const n = name.toLowerCase();
       const s = sube.toLowerCase();
-      if ((n.includes('ekim') && m === '10') || n.includes(year)) {
-        if (n.includes(s) || n.includes(s.slice(0,5))) {
-          list = arsivler[name].personeller || [];
-          break;
-        }
+      // Sadece seçilen yıla ait arşivleri al
+      if (!n.includes(year)) continue;
+      if (n.includes(s) || n.includes(s.slice(0,5))) {
+        list = arsivler[name].personeller || [];
+        break;
       }
     }
-    if (m === '11' && data.aylar?.current) {
+    // Current sadece seçilen yıl 2026 ise ve Kasım ise
+    if (year === '2026' && m === '11' && data.aylar?.current) {
       const cur = data.aylar.current.personeller.filter(p => p.sube === sube);
       if (cur.length) list = cur;
     }
