@@ -185,6 +185,7 @@ input.formula {
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -260,6 +261,22 @@ input.formula {
 <!-- ÖZET -->
 <div id="tab-ozet" style="display:none;">
   <div class="summary-grid" id="summaryGrid"></div>
+
+  <div class="card" style="padding:20px; margin-top:20px;">
+    <h3 style="margin-top:0;">Yıllık Görünüm</h3>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; align-items:center;">
+      <select id="yearlySube" onchange="renderYearly()" style="min-width:160px;">
+        <option value="">Şube seç</option>
+      </select>
+      <select id="yearlyYear" onchange="renderYearly()" style="min-width:100px;">
+        <option value="2026">2026</option>
+        <option value="2027">2027</option>
+      </select>
+    </div>
+    <div id="yearlySummary" style="font-weight:600; margin-bottom:12px;"></div>
+    <canvas id="yearlyChart" height="120"></canvas>
+    <div id="yearlyTable" style="margin-top:16px; overflow-x:auto;"></div>
+  </div>
 </div>
 
 <!-- ARŞİV -->
@@ -826,7 +843,7 @@ function showTab(tab) {
   document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
   if (tab === 'arsiv') renderArsiv();
-  if (tab === 'ozet') renderSummary();
+  if (tab === 'ozet') { renderSummary(); updateYearlySubeSelect(); renderYearly(); }
 }
 
 function renderSummary() {
@@ -1053,6 +1070,88 @@ function deletePerson(id) {
     save();
     renderTable();
   }
+}
+
+let yearlyChart = null;
+
+function renderYearly() {
+  const sube = document.getElementById('yearlySube')?.value;
+  const year = document.getElementById('yearlyYear')?.value || '2026';
+  if (!sube) {
+    document.getElementById('yearlySummary').textContent = 'Şube seçin';
+    document.getElementById('yearlyTable').innerHTML = '';
+    if (yearlyChart) yearlyChart.destroy();
+    return;
+  }
+
+  const months = ['01','02','03','04','05','06','07','08','09','10','11','12'];
+  const monthNames = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  const dataPoints = [];
+
+  months.forEach((m, i) => {
+    const key = `${year}-${m}`;
+    let list = [];
+    // Arşivlerden bak
+    const arsivler = data.arsivler || {};
+    for (const name in arsivler) {
+      if (name.includes(year) && name.toLowerCase().includes(sube.toLowerCase().slice(0,4))) {
+        list = arsivler[name].personeller || [];
+        break;
+      }
+    }
+    // Current de bu aysa ekle
+    if (key === '2026-11' && data.aylar?.current) {
+      list = data.aylar.current.personeller.filter(p => p.sube === sube) || list;
+    }
+    const maas = list.reduce((s,p) => s + (p.maas||0), 0);
+    const hak = list.reduce((s,p) => s + calc(p).hakedis, 0);
+    dataPoints.push({ month: monthNames[i], maas, hak, count: list.length });
+  });
+
+  const totalMaas = dataPoints.reduce((s,d) => s + d.maas, 0);
+  const totalHak = dataPoints.reduce((s,d) => s + d.hak, 0);
+  document.getElementById('yearlySummary').innerHTML = 
+    `<b>${sube} ${year}</b> — Toplam Maaş: ${format(totalMaas)} | Toplam Hakediş: ${format(totalHak)}`;
+
+  // Chart
+  const ctx = document.getElementById('yearlyChart');
+  if (yearlyChart) yearlyChart.destroy();
+  yearlyChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: dataPoints.map(d => d.month),
+      datasets: [{
+        label: 'Hakediş',
+        data: dataPoints.map(d => d.hak),
+        backgroundColor: 'rgba(31,78,121,0.75)',
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { callback: v => (v/1000).toFixed(0)+'K' } } }
+    }
+  });
+
+  // Table
+  let rows = dataPoints.map(d => 
+    `<tr><td>${d.month}</td><td>${d.count}</td><td>${format(d.maas)}</td><td>${format(d.hak)}</td></tr>`
+  ).join('');
+  document.getElementById('yearlyTable').innerHTML = `
+    <table style="width:100%; font-size:13px;">
+      <thead><tr style="background:#1F4E79;color:white;"><th>Ay</th><th>Kişi</th><th>Maaş</th><th>Hakediş</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function updateYearlySubeSelect() {
+  const sel = document.getElementById('yearlySube');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Şube seç</option>' + 
+    (data.subeler || []).map(s => `<option>${s}</option>`).join('');
+  sel.value = current;
 }
 
 </script>
