@@ -524,15 +524,15 @@ function renderTable() {
     tr.dataset.id = p.id;
     tr.innerHTML = `
       <td>${idx + 1}</td>
-      <td class="name"><input type="text" value="${p.ad||''}" onchange="updateField('${p.id}','ad',this.value)"></td>
-      <td><input type="number" value="${p.maas||0}" onchange="updateField('${p.id}','maas',+this.value)"></td>
-      <td><input type="number" value="${p.gun||0}" onchange="updateField('${p.id}','gun',+this.value)"></td>
+      <td class="name"><input type="text" value="${p.ad||''}" onblur="updateField('${p.id}','ad',this.value)"></td>
+      <td><input type="number" value="${p.maas||0}" onblur="updateField('${p.id}','maas',+this.value)"></td>
+      <td><input type="number" value="${p.gun||0}" onblur="updateField('${p.id}','gun',+this.value)"></td>
       <td><input class="formula" value="${format(c.dev)}" readonly></td>
-      <td><input type="number" value="${p.avans||0}" onchange="updateField('${p.id}','avans',+this.value)"></td>
-      <td><input type="number" value="${p.ceza||0}" onchange="updateField('${p.id}','ceza',+this.value)"></td>
-      <td><input type="number" value="${p.bes||0}" onchange="updateField('${p.id}','bes',+this.value)"></td>
-      <td><input type="number" value="${p.haciz||0}" onchange="updateField('${p.id}','haciz',+this.value)"></td>
-      <td><input type="number" value="${p.borc||0}" onchange="updateField('${p.id}','borc',+this.value)"></td>
+      <td><input type="number" value="${p.avans||0}" onblur="updateField('${p.id}','avans',+this.value)"></td>
+      <td><input type="number" value="${p.ceza||0}" onblur="updateField('${p.id}','ceza',+this.value)"></td>
+      <td><input type="number" value="${p.bes||0}" onblur="updateField('${p.id}','bes',+this.value)"></td>
+      <td><input type="number" value="${p.haciz||0}" onblur="updateField('${p.id}','haciz',+this.value)"></td>
+      <td><input type="number" value="${p.borc||0}" onblur="updateField('${p.id}','borc',+this.value)"></td>
       <td><input class="formula" value="${format(c.toplam)}" readonly></td>
       <td><input class="formula" value="${format(c.hakedis)}" readonly style="font-weight:700;color:#1F4E79"></td>
       <td>
@@ -572,13 +572,18 @@ function renderTable() {
 
 function updateField(id, field, value) {
   const ay = getCurrentMonth();
+  if (!data.aylar[ay]) return;
   const p = data.aylar[ay].personeller.find(x => String(x.id) === String(id));
-  if (p) {
-    p[field] = value;
-    ignoreNextRealtime = true;
-    save();
-    updateRowCalculations(id);
+  if (!p) {
+    console.warn("Kişi bulunamadı:", id);
+    return;
   }
+  p[field] = value;
+  ignoreNextRealtime = true;
+  save();
+  updateRowCalculations(id);
+  // Güvenlik için kısa süre sonra flag'i sıfırla
+  setTimeout(() => { ignoreNextRealtime = false; }, 800);
 }
 
 function updateRowCalculations(id) {
