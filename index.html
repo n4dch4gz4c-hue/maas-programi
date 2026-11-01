@@ -180,21 +180,11 @@ input.formula {
   th, td { padding: 6px 4px; }
 }
 
-/* Sütun genişlikleri - sayfaya sığacak */
+/* Sütun genişlikleri - isim geniş, diğerleri eşit */
 #bordroTable { table-layout: fixed; width: 100%; }
-#bordroTable th:nth-child(1), #bordroTable td:nth-child(1) { width: 42px; }
-#bordroTable th:nth-child(2), #bordroTable td:nth-child(2) { width: 160px; }
-#bordroTable th:nth-child(3), #bordroTable td:nth-child(3) { width: 80px; }
-#bordroTable th:nth-child(4), #bordroTable td:nth-child(4) { width: 48px; }
-#bordroTable th:nth-child(5), #bordroTable td:nth-child(5) { width: 85px; }
-#bordroTable th:nth-child(6), #bordroTable td:nth-child(6) { width: 68px; }
-#bordroTable th:nth-child(7), #bordroTable td:nth-child(7) { width: 62px; }
-#bordroTable th:nth-child(8), #bordroTable td:nth-child(8) { width: 62px; }
-#bordroTable th:nth-child(9), #bordroTable td:nth-child(9) { width: 62px; }
-#bordroTable th:nth-child(10), #bordroTable td:nth-child(10) { width: 62px; }
-#bordroTable th:nth-child(11), #bordroTable td:nth-child(11) { width: 90px; }
-#bordroTable th:nth-child(12), #bordroTable td:nth-child(12) { width: 90px; }
-#bordroTable th:nth-child(13), #bordroTable td:nth-child(13) { width: 95px; }
+#bordroTable th:nth-child(1), #bordroTable td:nth-child(1) { width: 50px; }
+#bordroTable th:nth-child(2), #bordroTable td:nth-child(2) { width: 180px; }
+#bordroTable th:nth-child(n+3), #bordroTable td:nth-child(n+3) { width: auto; }
 
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
