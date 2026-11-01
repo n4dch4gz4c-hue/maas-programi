@@ -180,7 +180,17 @@ input.formula {
   th, td { padding: 6px 4px; }
 }
 
-/* Eşit genişlik sütunlar */
+/* Sütun genişlikleri */
+#bordroTable th:nth-child(2),
+#bordroTable td:nth-child(2) { width: 180px; min-width: 160px; } /* İsim */
+
+#bordroTable th:nth-child(3),
+#bordroTable td:nth-child(3),
+#bordroTable th:nth-child(12),
+#bordroTable td:nth-child(12) { width: 100px; min-width: 90px; } /* Maaş ve Hakediş */
+
+#bordroTable th:nth-child(4),
+#bordroTable td:nth-child(4),
 #bordroTable th:nth-child(5),
 #bordroTable td:nth-child(5),
 #bordroTable th:nth-child(6),
@@ -194,13 +204,7 @@ input.formula {
 #bordroTable th:nth-child(10),
 #bordroTable td:nth-child(10),
 #bordroTable th:nth-child(11),
-#bordroTable td:nth-child(11),
-#bordroTable th:nth-child(12),
-#bordroTable td:nth-child(12) {
-  width: 90px !important;
-  min-width: 90px;
-  max-width: 90px;
-}
+#bordroTable td:nth-child(11) { width: 75px; min-width: 70px; max-width: 80px; } /* Diğerleri eşit */
 
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
