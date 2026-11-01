@@ -295,7 +295,7 @@ const db = firebase.database();
 const STORAGE_KEY = 'cadde_maas_v2';
 
 let data = {
-  subeler: ['Cadde', 'Kadıköy', 'Çengelöy', 'Taksim Pide', 'Taksim Büfe'],
+  subeler: ['Cadde', 'Kadıköy', 'Çengelköy', 'Taksim Pide', 'Taksim Büfe'],
   aylar: {}
 };
 
@@ -307,9 +307,19 @@ function getCurrentMonth() {
 function loadMonth() {
   const ay = getCurrentMonth();
   if (!data.aylar) data.aylar = {};
-  if (!data.aylar.current) {
+  if (!data.aylar.current || !data.aylar.current.personeller || data.aylar.current.personeller.length === 0) {
     // Eski Ekim verisini current'a taşı
-    data.aylar.current = data.aylar["2026-10"] || { personeller: [] };
+    if (data.aylar["2026-10"] && data.aylar["2026-10"].personeller) {
+      data.aylar.current = JSON.parse(JSON.stringify(data.aylar["2026-10"]));
+      save(); // hemen kaydet
+    } else {
+      data.aylar.current = { personeller: [] };
+    }
+  }
+  // Yanlış şubeyi temizle
+  if (data.subeler) {
+    data.subeler = data.subeler.filter(s => s !== "Çengelöy");
+    if (!data.subeler.includes("Çengelköy")) data.subeler.push("Çengelköy");
   }
   if (!data.aylar[ay]) {
     data.aylar[ay] = { personeller: [] };
@@ -319,14 +329,14 @@ function loadMonth() {
     }
   }
   // Yeni şubeleri ve personelleri ekle
-  const required = ['Cadde', 'Kadıköy', 'Çengelöy', 'Taksim Pide', 'Taksim Büfe'];
+  const required = ['Cadde', 'Kadıköy', 'Çengelköy', 'Taksim Pide', 'Taksim Büfe'];
   required.forEach(s => {
     if (!data.subeler.includes(s)) data.subeler.push(s);
   });
   let added = false;
   cengelInit.forEach(p => {
-    if (!data.aylar[ay].personeller.find(x => x.ad === p.ad && x.sube === 'Çengelöy')) {
-      data.aylar[ay].personeller.push({...p, sube: 'Çengelöy', id: Date.now() + Math.random()});
+    if (!data.aylar[ay].personeller.find(x => x.ad === p.ad && x.sube === 'Çengelköy')) {
+      data.aylar[ay].personeller.push({...p, sube: 'Çengelköy', id: Date.now() + Math.random()});
       added = true;
     }
   });
