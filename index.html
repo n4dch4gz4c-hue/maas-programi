@@ -860,10 +860,56 @@ function renderArsiv() {
     const pList = arsivler[name].personeller || [];
     let hak = 0;
     pList.forEach(p => hak += calc(p).hakedis);
-    return `<div style="margin:10px 0;padding:12px;background:#f8f9fa;border-radius:8px;">
-      <b>${name}</b> — ${pList.length} kişi — Hakediş: ${format(hak)}
+    return `<div style="margin:10px 0;padding:12px;background:#f8f9fa;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <b>${name}</b> — ${pList.length} kişi — Hakediş: ${format(hak)}
+      </div>
+      <div>
+        <button onclick="viewArsiv('${name}')" style="padding:6px 12px;margin-right:6px;">Görüntüle</button>
+        <button onclick="exportArsivPdf('${name}')" style="padding:6px 12px;">PDF İndir</button>
+      </div>
     </div>`;
   }).join('') || '<p>Henüz arşiv yok.</p>';
+}
+
+function viewArsiv(name) {
+  const arsiv = data.arsivler?.[name];
+  if (!arsiv) return alert('Arşiv bulunamadı');
+  // Geçici olarak current'ı arşivle değiştirip göster, sonra geri al
+  const backup = JSON.parse(JSON.stringify(data.aylar.current));
+  data.aylar.current = JSON.parse(JSON.stringify(arsiv));
+  showTab('bordro');
+  renderTable();
+  alert(name + ' arşivi görüntüleniyor. Değişiklik yapma!\nGeri dönmek için sayfayı yenile.');
+  // Not: gerçek geri dönüş için ayrı buton eklenebilir
+}
+
+async function exportArsivPdf(name) {
+  const arsiv = data.arsivler?.[name];
+  if (!arsiv) return alert('Arşiv bulunamadı');
+  const list = arsiv.personeller || [];
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation: 'landscape', unit: 'mm', format: 'a4'});
+  const headers = [['Sıra', 'Ad Soyad', 'Maaş', 'Gün', 'Devamsızlık', 'Avans', 'Ceza', 'BES', 'Haciz', 'Borç', 'Toplam Kesinti', 'Hakediş']];
+  const body = [];
+  list.forEach((p, i) => {
+    const c = calc(p);
+    body.push([
+      i+1, p.ad||'', (p.maas||0).toLocaleString('tr-TR'), p.gun||0,
+      c.dev.toLocaleString('tr-TR'), (p.avans||0).toLocaleString('tr-TR'),
+      (p.ceza||0).toLocaleString('tr-TR'), (p.bes||0).toLocaleString('tr-TR'),
+      (p.haciz||0).toLocaleString('tr-TR'), (p.borc||0).toLocaleString('tr-TR'),
+      c.toplam.toLocaleString('tr-TR'), c.hakedis.toLocaleString('tr-TR')
+    ]);
+  });
+  doc.autoTable({
+    head: headers,
+    body: body,
+    startY: 15,
+    styles: { fontSize: 7, cellPadding: 1 },
+    headStyles: { fillColor: [31, 78, 121], textColor: 255, fontStyle: 'bold' }
+  });
+  doc.save(name + '.pdf');
 }
 
 function renderSubeList() {
