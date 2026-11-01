@@ -1187,10 +1187,11 @@ function renderYearly() {
       <td style="padding:10px;color:#667eea;font-weight:700;">${d.hak ? format(d.hak) : '-'}</td>
     </tr>`
   ).join('');
-  const totalCount = dataPoints.reduce((s,d) => s + (d.count||0), 0);
+  const lastWithPeople = [...dataPoints].reverse().find(d => d.count > 0);
+  const kisi = lastWithPeople ? lastWithPeople.count : 0;
   rows += `<tr style="background:#1F4E79;color:white;font-weight:700;">
     <td style="text-align:left;padding:12px;">TOPLAM</td>
-    <td style="padding:12px;">${totalCount}</td>
+    <td style="padding:12px;">${kisi} kişi</td>
     <td style="padding:12px;">${format(totalMaas)}</td>
     <td style="padding:12px;">${format(totalHak)}</td>
   </tr>`;
