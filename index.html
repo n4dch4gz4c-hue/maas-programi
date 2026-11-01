@@ -1002,56 +1002,50 @@ async function exportData() {
 
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({orientation: 'landscape', unit: 'mm', format: 'a4'});
+  await loadTurkishFont(doc);
 
-  const headers = [['Sıra', 'Ad Soyad', 'Maaş', 'Gün', 'Devamsızlık', 'Avans', 'Ceza', 'BES', 'Haciz', 'Borç', 'Toplam Kesinti', 'Hakediş']];
-  const body = [];
-  let sumMaas=0, sumDev=0, sumAv=0, sumCeza=0, sumBes=0, sumHaciz=0, sumBorc=0, sumTop=0, sumHak=0;
+  const title = filter || "Tüm Şubeler";
+  const now = new Date().toLocaleString("tr-TR", {day:"2-digit", month:"long", year:"numeric"});
+  doc.setFillColor(11,18,32);
+  doc.rect(0,0,297,12,"F");
+  doc.setFontSize(12); doc.setTextColor(255,255,255);
+  doc.text(title + " - Bordro", 10, 8);
+  doc.setFontSize(8);
+  doc.text(now, 287, 8, {align:"right"});
 
-  list.forEach((p, i) => {
+  const body = list.map((p, i) => {
     const c = calc(p);
-    sumMaas += p.maas||0; sumDev += c.dev; sumAv += p.avans||0;
-    sumCeza += p.ceza||0; sumBes += p.bes||0; sumHaciz += p.haciz||0;
-    sumBorc += p.borc||0; sumTop += c.toplam; sumHak += c.hakedis;
-    body.push([
-      i+1, p.ad||'', (p.maas||0).toLocaleString('tr-TR'), p.gun||0,
+    return [
+      i+1, p.ad||'', 
+      (p.maas||0).toLocaleString('tr-TR'), p.gun||0,
       c.dev.toLocaleString('tr-TR'), (p.avans||0).toLocaleString('tr-TR'),
       (p.ceza||0).toLocaleString('tr-TR'), (p.bes||0).toLocaleString('tr-TR'),
       (p.haciz||0).toLocaleString('tr-TR'), (p.borc||0).toLocaleString('tr-TR'),
       c.toplam.toLocaleString('tr-TR'), c.hakedis.toLocaleString('tr-TR')
-    ]);
+    ];
   });
 
-  const foot = [['', 'TOPLAM', sumMaas.toLocaleString('tr-TR'), '', sumDev.toLocaleString('tr-TR'), sumAv.toLocaleString('tr-TR'), sumCeza.toLocaleString('tr-TR'), sumBes.toLocaleString('tr-TR'), sumHaciz.toLocaleString('tr-TR'), sumBorc.toLocaleString('tr-TR'), sumTop.toLocaleString('tr-TR'), sumHak.toLocaleString('tr-TR')]];
+  let sumMaas=0, sumDev=0, sumAv=0, sumCeza=0, sumBes=0, sumHaciz=0, sumBorc=0, sumTop=0, sumHak=0;
+  list.forEach(p => {
+    const c = calc(p);
+    sumMaas += p.maas||0; sumDev += c.dev; sumAv += p.avans||0;
+    sumCeza += p.ceza||0; sumBes += p.bes||0; sumHaciz += p.haciz||0;
+    sumBorc += p.borc||0; sumTop += c.toplam; sumHak += c.hakedis;
+  });
 
   doc.autoTable({
-    head: headers,
+    startY: 16,
+    head: [['Sıra','Ad Soyad','Maaş','Gün','Devamsızlık','Avans','Ceza','BES','Haciz','Borç','Toplam','Hakediş']],
     body: body,
-    foot: foot,
-    startY: 15,
-    styles: { fontSize: 6.5, cellPadding: 1, textColor: [30, 30, 30], lineColor: [200, 200, 200], lineWidth: 0.1 },
-    headStyles: { fillColor: [31, 78, 121], textColor: 255, fontStyle: "bold", halign: "center", fontSize: 6.5 },
-    footStyles: { fillColor: [31, 78, 121], textColor: 255, fontStyle: "bold" },
-    alternateRowStyles: { fillColor: [245, 247, 250] },
-    columnStyles: {
-      0: { halign: "center", cellWidth: 12 },
-      1: { halign: "left", cellWidth: 50 },
-      2: { halign: "right", cellWidth: 20 },
-      3: { halign: "center", cellWidth: 14 },
-      4: { halign: "right", cellWidth: 22 },
-      5: { halign: "right", cellWidth: 18 },
-      6: { halign: "right", cellWidth: 18 },
-      7: { halign: "right", cellWidth: 18 },
-      8: { halign: "right", cellWidth: 18 },
-      9: { halign: "right", cellWidth: 18 },
-      10: { halign: "right", cellWidth: 22 },
-      11: { halign: "right", cellWidth: 22, fontStyle: "bold" }
-    },
-    margin: { left: 4, right: 4, top: 15, bottom: 8 }
+    foot: [['','TOPLAM', sumMaas.toLocaleString('tr-TR'), '', sumDev.toLocaleString('tr-TR'), sumAv.toLocaleString('tr-TR'), sumCeza.toLocaleString('tr-TR'), sumBes.toLocaleString('tr-TR'), sumHaciz.toLocaleString('tr-TR'), sumBorc.toLocaleString('tr-TR'), sumTop.toLocaleString('tr-TR'), sumHak.toLocaleString('tr-TR')]],
+    theme: "grid",
+    styles: {font:"Roboto", fontSize:6.5, cellPadding:0.8, halign:"center", textColor:[20,20,20]},
+    headStyles: {fillColor:[31,78,121], textColor:255, fontStyle:"bold"},
+    footStyles: {fillColor:[34,34,34], textColor:255, fontStyle:"bold"},
+    columnStyles: {1:{halign:"left"}},
+    margin: {left:6, right:6}
   });
-
-  const blob = doc.output('blob');
-  const url = URL.createObjectURL(blob);
-  window.open(url, '_blank');
+  doc.save((filter || "Bordro") + ".pdf");
 }
 
 function importData() {
