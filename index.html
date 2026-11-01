@@ -317,17 +317,20 @@ function loadMonth() {
   required.forEach(s => {
     if (!data.subeler.includes(s)) data.subeler.push(s);
   });
+  let added = false;
   cengelInit.forEach(p => {
     if (!data.aylar[ay].personeller.find(x => x.ad === p.ad && x.sube === 'Çengelöy')) {
       data.aylar[ay].personeller.push({...p, sube: 'Çengelöy', id: Date.now() + Math.random()});
+      added = true;
     }
   });
   kadikoyInit.forEach(p => {
     if (!data.aylar[ay].personeller.find(x => x.ad === p.ad && x.sube === 'Kadıköy')) {
       data.aylar[ay].personeller.push({...p, sube: 'Kadıköy', id: Date.now() + Math.random()});
+      added = true;
     }
   });
-  save();
+  if (added) save();
   updateSubeSelect();
   renderTable();
   renderSubeList();
@@ -340,8 +343,16 @@ function load() {
   db.ref("maas").on("value", snap => {
     const fbData = snap.val();
     if (fbData && fbData.aylar) {
-      data = fbData;
-      console.log("Firebase anlık güncellendi");
+      const ay = getCurrentMonth();
+      const remoteCount = fbData.aylar[ay]?.personeller?.length || 0;
+      const localCount = data.aylar[ay]?.personeller?.length || 0;
+      // Uzaktan gelen daha azsa (veya boşsa) üzerine yazma
+      if (remoteCount >= localCount || isInitialLoad) {
+        data = fbData;
+        console.log("Firebase anlık güncellendi");
+      } else {
+        console.log("Yerel veri daha güncel, Firebase üzerine yazılmadı");
+      }
     } else if (isInitialLoad) {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -553,14 +564,11 @@ function renderTable() {
 
   const isArsiv = data.aylar[ay]?.arsiv;
   if (isArsiv) {
-    // Disable inputs if archived
     setTimeout(() => {
       document.querySelectorAll('#tbody input').forEach(inp => inp.disabled = true);
     }, 50);
   }
 }
-
-let ignoreNextRealtime = false;
 
 function updateField(id, field, value) {
   const ay = getCurrentMonth();
@@ -569,7 +577,6 @@ function updateField(id, field, value) {
     p[field] = value;
     ignoreNextRealtime = true;
     save();
-    // Sadece bu satırın hesaplanan alanlarını güncelle, tabloyu yeniden çizme
     updateRowCalculations(id);
   }
 }
@@ -695,7 +702,6 @@ function moveToPosition(id, newPos) {
   renderTable();
 }
 
-// Eski sürükle kodu kaldırıldı
 function movePerson() {}
 
 function updateSubeSelect() {
@@ -781,7 +787,6 @@ function arsivle() {
   const ay = getCurrentMonth();
   if (!confirm(ay + ' ayını arşivleyip yeni ay başlatılsın mı?')) return;
   if (data.aylar[ay]) data.aylar[ay].arsiv = true;
-  // Yeni ay oluştur (sonraki ay)
   const [y, m] = ay.split('-').map(Number);
   const next = m === 12 ? `${y+1}-01` : `${y}-${String(m+1).padStart(2,'0')}`;
   if (!data.aylar[next]) {
@@ -867,12 +872,6 @@ async function exportData() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({orientation: 'landscape', unit: 'mm', format: 'a4'});
 
-  // Font yükle (basit)
-  let fontBase64 = null;
-  try {
-    // Roboto yoksa helvetica kullan
-  } catch(e) {}
-
   const headers = [['Sıra', 'Ad Soyad', 'Maaş', 'Gün', 'Devamsızlık', 'Avans', 'Ceza', 'BES', 'Haciz', 'Borç', 'Toplam Kesinti', 'Hakediş']];
   const body = [];
   let sumMaas=0, sumDev=0, sumAv=0, sumCeza=0, sumBes=0, sumHaciz=0, sumBorc=0, sumTop=0, sumHak=0;
@@ -898,26 +897,9 @@ async function exportData() {
     body: body,
     foot: foot,
     startY: 15,
-    styles: { 
-      font: fontBase64 ? "Roboto" : "helvetica",
-      fontSize: 6.5, 
-      cellPadding: 1,
-      textColor: [30, 30, 30],
-      lineColor: [200, 200, 200],
-      lineWidth: 0.1
-    },
-    headStyles: { 
-      fillColor: [31, 78, 121], 
-      textColor: 255,
-      fontStyle: "bold",
-      halign: "center",
-      fontSize: 6.5
-    },
-    footStyles: { 
-      fillColor: [31, 78, 121], 
-      textColor: 255,
-      fontStyle: "bold"
-    },
+    styles: { fontSize: 6.5, cellPadding: 1, textColor: [30, 30, 30], lineColor: [200, 200, 200], lineWidth: 0.1 },
+    headStyles: { fillColor: [31, 78, 121], textColor: 255, fontStyle: "bold", halign: "center", fontSize: 6.5 },
+    footStyles: { fillColor: [31, 78, 121], textColor: 255, fontStyle: "bold" },
     alternateRowStyles: { fillColor: [245, 247, 250] },
     columnStyles: {
       0: { halign: "center", cellWidth: 12 },
