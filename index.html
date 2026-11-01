@@ -358,36 +358,23 @@ function loadMonth() {
     if (!data.subeler.includes(s)) data.subeler.push(s);
   });
   let added = false;
-  // Çengelköy - eğer şubede kimse yoksa veya azsa init ekle
-  const cengelCount = data.aylar[ay].personeller.filter(p => p.sube === 'Çengelköy').length;
-  if (cengelCount < 5) {
-    cengelInit.forEach(p => {
-      if (!data.aylar[ay].personeller.find(x => x.ad === p.ad && x.sube === 'Çengelköy')) {
-        data.aylar[ay].personeller.push({...p, sube: 'Çengelköy', id: Date.now() + Math.random()});
-        added = true;
-      }
-    });
-  }
-  // Kadıköy
-  const kadikoyCount = data.aylar[ay].personeller.filter(p => p.sube === 'Kadıköy').length;
-  if (kadikoyCount < 5) {
-    kadikoyInit.forEach(p => {
-      if (!data.aylar[ay].personeller.find(x => x.ad === p.ad && x.sube === 'Kadıköy')) {
-        data.aylar[ay].personeller.push({...p, sube: 'Kadıköy', id: Date.now() + Math.random()});
-        added = true;
-      }
-    });
-  }
-  // Cadde
-  const caddeCount = data.aylar[ay].personeller.filter(p => p.sube === 'Cadde').length;
-  if (caddeCount < 5) {
-    caddeInit.forEach(p => {
-      if (!data.aylar[ay].personeller.find(x => x.ad === p.ad && x.sube === 'Cadde')) {
-        data.aylar[ay].personeller.push({...p, sube: 'Cadde', id: Date.now() + Math.random()});
-        added = true;
-      }
-    });
-  }
+  // Her şube için eksik personelleri ekle
+  const branches = [
+    { name: 'Çengelköy', init: cengelInit },
+    { name: 'Kadıköy', init: kadikoyInit },
+    { name: 'Cadde', init: caddeInit }
+  ];
+  branches.forEach(b => {
+    const count = data.aylar[ay].personeller.filter(p => p.sube === b.name).length;
+    if (count < 3) { // çok az varsa veya yoksa
+      b.init.forEach(p => {
+        if (!data.aylar[ay].personeller.find(x => x.ad === p.ad && x.sube === b.name)) {
+          data.aylar[ay].personeller.push({...p, sube: b.name, id: Date.now() + Math.random()});
+          added = true;
+        }
+      });
+    }
+  });
   if (added) save();
   updateSubeSelect();
   renderTable();
@@ -425,6 +412,7 @@ function load() {
       ignoreNextRealtime = false;
       return; // kendi kaydettiğimiz değişikliği yoksay
     }
+    loadMonth(); // personelleri kontrol et ve eksikse ekle
     updateSubeSelect();
     renderTable();
     renderSubeList();
