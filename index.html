@@ -207,8 +207,8 @@ input.formula {
 <!-- BORDRO -->
 <div id="tab-bordro">
   <div class="controls">
-    <label>Ay:</label>
-    <select id="filterAy" onchange="loadMonth()">
+    <label style="display:none;">Ay:</label>
+    <select id="filterAy" onchange="loadMonth()" style="display:none;">
       <option value="2026-10">Ekim 2026</option>
       <option value="2026-09">Eylül 2026</option>
       <option value="2026-08">Ağustos 2026</option>
@@ -224,7 +224,7 @@ input.formula {
     <button onclick="document.getElementById('importFile').click()" class="secondary">📄 Excel/PDF</button>
     <button onclick="syncDevamsizlik()" class="secondary">Devamsızlık Çek</button>
     <button onclick="syncCeza()" class="secondary">Ceza Çek</button>
-    <button onclick="arsivle()" class="secondary">Arşivle & Yeni Ay</button>
+    <button onclick="arsivle()" class="secondary">Arşivle</button>
     <button onclick="showTab('arsiv')" class="secondary">Arşiv</button>
     <span id="personCount" style="margin-left:auto; font-weight:600;"></span>
   </div>
@@ -300,11 +300,17 @@ let data = {
 };
 
 function getCurrentMonth() {
-  return document.getElementById('filterAy')?.value || '2026-10';
+  // Düzenleme her zaman "current" üzerinde çalışır
+  return "current";
 }
 
 function loadMonth() {
   const ay = getCurrentMonth();
+  if (!data.aylar) data.aylar = {};
+  if (!data.aylar.current) {
+    // Eski Ekim verisini current'a taşı
+    data.aylar.current = data.aylar["2026-10"] || { personeller: [] };
+  }
   if (!data.aylar[ay]) {
     data.aylar[ay] = { personeller: [] };
     // İlk açılışta Cadde'yi doldur
@@ -784,18 +790,22 @@ function syncCeza() {
 }
 
 function arsivle() {
-  const ay = getCurrentMonth();
-  if (!confirm(ay + ' ayını arşivleyip yeni ay başlatılsın mı?')) return;
-  if (data.aylar[ay]) data.aylar[ay].arsiv = true;
-  const [y, m] = ay.split('-').map(Number);
-  const next = m === 12 ? `${y+1}-01` : `${y}-${String(m+1).padStart(2,'0')}`;
-  if (!data.aylar[next]) {
-    data.aylar[next] = { personeller: data.aylar[ay].personeller.map(p => ({...p, gun:0, avans:0, ceza:0})) };
+  const name = prompt("Bu arşivin adı ne olsun? (örnek: Ekim 2026)", "Ekim 2026");
+  if (!name) return;
+  if (!data.arsivler) data.arsivler = {};
+  // Mevcut listeyi arşive kopyala
+  data.arsivler[name] = JSON.parse(JSON.stringify(data.aylar.current || {personeller:[]}));
+  // Gün/avans/ceza sıfırla, devam et
+  if (data.aylar.current) {
+    data.aylar.current.personeller.forEach(p => {
+      p.gun = 0;
+      p.avans = 0;
+      p.ceza = 0;
+    });
   }
   save();
-  document.getElementById('filterAy').value = next;
-  loadMonth();
-  alert('Arşivlendi. Yeni ay açıldı.');
+  renderTable();
+  alert(name + " arşivlendi. Kaldığın yerden devam edebilirsin.");
 }
 
 function showTab(tab) {
@@ -834,16 +844,14 @@ function renderSummary() {
 function renderArsiv() {
   const list = document.getElementById('arsivList');
   if (!list) return;
-  const aylar = Object.keys(data.aylar || {}).sort().reverse();
-  list.innerHTML = aylar.map(a => {
-    const filter = document.getElementById('filterSube').value;
-    let list = data.aylar[a].personeller || [];
-    if (filter) list = list.filter(p => p.sube === filter);
+  const arsivler = data.arsivler || {};
+  const names = Object.keys(arsivler).sort().reverse();
+  list.innerHTML = names.map(name => {
+    const pList = arsivler[name].personeller || [];
     let hak = 0;
-    list.forEach(p => hak += calc(p).hakedis);
+    pList.forEach(p => hak += calc(p).hakedis);
     return `<div style="margin:10px 0;padding:12px;background:#f8f9fa;border-radius:8px;">
-      <b>${a}</b> ${filter ? '(' + filter + ')' : ''} — ${list.length} kişi — Hakediş: ${format(hak)}
-      ${data.aylar[a].arsiv ? '<span style="color:green;"> (Arşivlendi)</span>' : ''}
+      <b>${name}</b> — ${pList.length} kişi — Hakediş: ${format(hak)}
     </div>`;
   }).join('') || '<p>Henüz arşiv yok.</p>';
 }
