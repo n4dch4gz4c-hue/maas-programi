@@ -1091,7 +1091,6 @@ function renderYearly() {
   months.forEach((m, i) => {
     let list = [];
     const arsivler = data.arsivler || {};
-    // Daha akıllı eşleşme
     for (const name in arsivler) {
       const n = name.toLowerCase();
       const s = sube.toLowerCase();
@@ -1102,7 +1101,6 @@ function renderYearly() {
         }
       }
     }
-    // Current (Kasım) için
     if (m === '11' && data.aylar?.current) {
       const cur = data.aylar.current.personeller.filter(p => p.sube === sube);
       if (cur.length) list = cur;
@@ -1114,11 +1112,21 @@ function renderYearly() {
 
   const totalMaas = dataPoints.reduce((s,d) => s + d.maas, 0);
   const totalHak = dataPoints.reduce((s,d) => s + d.hak, 0);
-  document.getElementById('yearlySummary').innerHTML = 
-    `<div style="background:linear-gradient(135deg,#1F4E79,#2a6cb0);color:white;padding:14px 18px;border-radius:12px;margin-bottom:16px;">
-      <b>${sube} — ${year}</b><br>
-      <span style="font-size:18px;">Toplam Maaş: ${format(totalMaas)}</span> &nbsp;|&nbsp; 
-      <span style="font-size:18px;">Toplam Hakediş: ${format(totalHak)}</span>
+
+  document.getElementById('yearlySummary').innerHTML = `
+    <div style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:20px;">
+      <div style="flex:1; min-width:180px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; padding:18px; border-radius:16px; box-shadow:0 8px 24px rgba(102,126,234,0.3);">
+        <div style="font-size:13px; opacity:0.9;">Toplam Maaş</div>
+        <div style="font-size:26px; font-weight:700; margin-top:4px;">${format(totalMaas)}</div>
+      </div>
+      <div style="flex:1; min-width:180px; background:linear-gradient(135deg,#f093fb,#f5576c); color:white; padding:18px; border-radius:16px; box-shadow:0 8px 24px rgba(245,87,108,0.3);">
+        <div style="font-size:13px; opacity:0.9;">Toplam Hakediş</div>
+        <div style="font-size:26px; font-weight:700; margin-top:4px;">${format(totalHak)}</div>
+      </div>
+      <div style="flex:1; min-width:180px; background:linear-gradient(135deg,#4facfe,#00f2fe); color:white; padding:18px; border-radius:16px; box-shadow:0 8px 24px rgba(79,172,254,0.3);">
+        <div style="font-size:13px; opacity:0.9;">${sube} • ${year}</div>
+        <div style="font-size:18px; font-weight:600; margin-top:4px;">Yıllık Özet</div>
+      </div>
     </div>`;
 
   const ctx = document.getElementById('yearlyChart');
@@ -1127,43 +1135,66 @@ function renderYearly() {
     type: 'bar',
     data: {
       labels: dataPoints.map(d => d.month),
-      datasets: [{
-        label: 'Hakediş',
-        data: dataPoints.map(d => d.hak),
-        backgroundColor: dataPoints.map(d => d.hak > 0 ? 'rgba(31,78,121,0.8)' : 'rgba(200,200,200,0.4)'),
-        borderRadius: 8,
-        borderSkipped: false
-      }]
+      datasets: [
+        {
+          label: 'Hakediş',
+          data: dataPoints.map(d => d.hak),
+          backgroundColor: dataPoints.map(d => d.hak > 0 
+            ? 'rgba(102,126,234,0.85)' 
+            : 'rgba(220,220,220,0.5)'),
+          borderRadius: 10,
+          borderSkipped: false,
+          barPercentage: 0.7
+        },
+        {
+          label: 'Maaş',
+          data: dataPoints.map(d => d.maas),
+          backgroundColor: dataPoints.map(d => d.maas > 0 
+            ? 'rgba(245,87,108,0.55)' 
+            : 'rgba(220,220,220,0.3)'),
+          borderRadius: 10,
+          borderSkipped: false,
+          barPercentage: 0.7
+        }
+      ]
     },
     options: {
       responsive: true,
+      interaction: { mode: 'index', intersect: false },
       plugins: { 
-        legend: { display: false },
-        tooltip: { callbacks: { label: ctx => format(ctx.raw) } }
+        legend: { position: 'top', labels: { font: { size: 13, weight: '600' }, usePointStyle: true } },
+        tooltip: { 
+          backgroundColor: '#1F4E79',
+          callbacks: { label: ctx => ctx.dataset.label + ': ' + format(ctx.raw) }
+        }
       },
       scales: { 
-        y: { beginAtZero: true, ticks: { callback: v => (v/1000).toFixed(0)+'K ₺' } },
-        x: { grid: { display: false } }
+        y: { 
+          beginAtZero: true, 
+          ticks: { callback: v => (v/1000).toFixed(0)+'K ₺', font: { size: 11 } },
+          grid: { color: 'rgba(0,0,0,0.05)' }
+        },
+        x: { grid: { display: false }, ticks: { font: { size: 12, weight: '500' } } }
       }
     }
   });
 
-  let rows = dataPoints.map(d => 
-    `<tr style="${d.hak>0?'background:#f8f9fa':''}">
-      <td style="text-align:left;padding-left:12px;"><b>${d.month}</b></td>
-      <td>${d.count || '-'}</td>
-      <td>${d.maas ? format(d.maas) : '-'}</td>
-      <td style="font-weight:600;color:#1F4E79">${d.hak ? format(d.hak) : '-'}</td>
+  let rows = dataPoints.map((d,i) => 
+    `<tr style="background:${i%2===0?'#fafbff':'white'};">
+      <td style="text-align:left;padding:10px 12px;font-weight:600;">${d.month}</td>
+      <td style="padding:10px;">${d.count || '-'}</td>
+      <td style="padding:10px;color:#f5576c;font-weight:600;">${d.maas ? format(d.maas) : '-'}</td>
+      <td style="padding:10px;color:#667eea;font-weight:700;">${d.hak ? format(d.hak) : '-'}</td>
     </tr>`
   ).join('');
   document.getElementById('yearlyTable').innerHTML = `
-    <table style="width:100%; font-size:13px; border-collapse:collapse;">
+    <table style="width:100%; font-size:13.5px; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,0.06);">
       <thead>
-        <tr style="background:#1F4E79;color:white;">
-          <th style="text-align:left;padding-left:12px;">Ay</th>
-          <th>Kişi</th>
-          <th>Maaş</th>
-          <th>Hakediş</th>
+        <tr style="background:linear-gradient(90deg,#667eea,#764ba2); color:white;">
+          <th style="text-align:left;padding:12px;">Ay</th>
+          <th style="padding:12px;">Kişi</th>
+          <th style="padding:12px;">Maaş</th>
+          <th style="padding:12px;">Hakediş</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
