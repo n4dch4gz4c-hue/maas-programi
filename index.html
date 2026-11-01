@@ -562,12 +562,7 @@ function renderTable() {
   document.getElementById('personCount').textContent = `${list.length} personel`;
   renderSummary();
 
-  const isArsiv = data.aylar[ay]?.arsiv;
-  if (isArsiv) {
-    setTimeout(() => {
-      document.querySelectorAll('#tbody input').forEach(inp => inp.disabled = true);
-    }, 50);
-  }
+  // Arşiv kilidi kaldırıldı - düzenleme her zaman açık
 }
 
 function updateField(id, field, value) {
