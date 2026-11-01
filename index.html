@@ -392,11 +392,9 @@ function load() {
       const remoteCount = fbData.aylar[ay]?.personeller?.length || 0;
       const localCount = data.aylar[ay]?.personeller?.length || 0;
       // Sadece başlangıçta veya remote daha fazla veri varsa al (kaybolmayı önle)
-      if (isInitialLoad || (remoteCount > localCount && remoteCount > 0)) {
+      if (isInitialLoad || remoteCount > 0) {
         data = fbData;
-        console.log("Firebase anlık güncellendi");
-      } else if (remoteCount === 0 && localCount > 0) {
-        console.log("Remote boş, yerel veri korundu");
+        console.log("Firebase anlık güncellendi, kişi sayısı:", remoteCount);
       } else {
         console.log("Yerel veri korundu");
       }
@@ -416,6 +414,7 @@ function load() {
     updateSubeSelect();
     renderTable();
     renderSubeList();
+    console.log("Tablo render edildi, toplam kişi:", data.aylar?.current?.personeller?.length || 0);
   }, err => {
     console.error("Firebase dinleme hatası:", err);
     if (isInitialLoad) {
