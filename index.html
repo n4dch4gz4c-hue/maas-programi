@@ -1121,10 +1121,19 @@ function renderYearly() {
         break;
       }
     }
-    // Current sadece seçilen yıl 2026 ise ve Kasım ise
+    // Current = Kasım (11)
     if (year === '2026' && m === '11' && data.aylar?.current) {
       const cur = data.aylar.current.personeller.filter(p => p.sube === sube);
       if (cur.length) list = cur;
+    }
+    // Ekim (10) — aylar["2026-10"] veya arşivden
+    if (year === '2026' && m === '10') {
+      let ekim = data.aylar?.["2026-10"]?.personeller || [];
+      if (!ekim.length && data.arsivler?.["Ekim 2026"]?.personeller) {
+        ekim = data.arsivler["Ekim 2026"].personeller;
+      }
+      const filtered = ekim.filter(p => p.sube === sube);
+      if (filtered.length) list = filtered;
     }
     const maas = list.reduce((s,p) => s + (p.maas||0), 0);
     const hak = list.reduce((s,p) => s + calc(p).hakedis, 0);
