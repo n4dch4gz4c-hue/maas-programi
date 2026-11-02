@@ -338,37 +338,26 @@ function loadMonth() {
   if (!data.aylar) data.aylar = {};
   if (!data.aylar.current) data.aylar.current = { personeller: [] };
   if (!data.aylar.current.personeller) data.aylar.current.personeller = [];
-  // Maaş yoksa arşivden geri yükle
+
+  // Maaş yoksa arşivden geri yükle (sadece bir kere, save yok)
   const hasSalary = data.aylar.current.personeller.some(p => (p.maas||0) > 0);
   if (!hasSalary && data.arsivler && data.arsivler["Ekim 2026"] && data.arsivler["Ekim 2026"].personeller) {
     data.aylar.current.personeller = JSON.parse(JSON.stringify(data.arsivler["Ekim 2026"].personeller));
-    save();
     console.log("Arşivden maaşlı veri geri yüklendi");
   }
+
   // Yanlış şubeyi temizle
   if (data.subeler) {
     data.subeler = data.subeler.filter(s => s !== "Çengelöy");
     if (!data.subeler.includes("Çengelköy")) data.subeler.push("Çengelköy");
   }
-  if (!data.aylar[ay]) {
-    data.aylar[ay] = { personeller: [] };
-    // İlk açılışta Cadde'yi doldur
-    if (ay === '2026-10' && data.aylar[ay].personeller.length === 0) {
-      data.aylar[ay].personeller = caddeInit.map(p => ({...p, sube: 'Cadde', id: Date.now() + Math.random()}));
-    }
-  }
-  // Yeni şubeleri ve personelleri ekle
+
+  // Yeni şubeleri ekle (sadece eksikse)
   const required = ['Cadde', 'Kadıköy', 'Çengelköy', 'Taksim Pide', 'Taksim Büfe'];
   required.forEach(s => {
     if (!data.subeler.includes(s)) data.subeler.push(s);
   });
-  let added = false;
-  // Çengelköy'ü her zaman PDF'deki gibi güncelle
-  const others = data.aylar[ay].personeller.filter(p => p.sube !== 'Çengelköy');
-  const cengelList = cengelInit.map(p => ({...p, sube: 'Çengelköy', id: Date.now() + Math.random()}));
-  data.aylar[ay].personeller = [...others, ...cengelList];
-  added = true;
-  if (added) save();
+
   updateSubeSelect();
   renderTable();
   renderSubeList();
