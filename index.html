@@ -335,10 +335,12 @@ function loadMonth() {
   if (!data.aylar) data.aylar = {};
   if (!data.aylar.current) data.aylar.current = { personeller: [] };
   if (!data.aylar.current.personeller) data.aylar.current.personeller = [];
-  // Sadece tamamen boşsa eski veriyi taşı
-  if (data.aylar.current.personeller.length === 0 && data.aylar["2026-10"] && data.aylar["2026-10"].personeller && data.aylar["2026-10"].personeller.length > 0) {
-    data.aylar.current = JSON.parse(JSON.stringify(data.aylar["2026-10"]));
+  // Maaş yoksa arşivden geri yükle
+  const hasSalary = data.aylar.current.personeller.some(p => (p.maas||0) > 0);
+  if (!hasSalary && data.arsivler && data.arsivler["Ekim 2026"] && data.arsivler["Ekim 2026"].personeller) {
+    data.aylar.current.personeller = JSON.parse(JSON.stringify(data.arsivler["Ekim 2026"].personeller));
     save();
+    console.log("Arşivden maaşlı veri geri yüklendi");
   }
   // Yanlış şubeyi temizle
   if (data.subeler) {
@@ -358,23 +360,11 @@ function loadMonth() {
     if (!data.subeler.includes(s)) data.subeler.push(s);
   });
   let added = false;
-  // Her şube için eksik personelleri ekle
-  const branches = [
-    { name: 'Çengelköy', init: cengelInit },
-    { name: 'Kadıköy', init: kadikoyInit },
-    { name: 'Cadde', init: caddeInit }
-  ];
-  branches.forEach(b => {
-    const count = data.aylar[ay].personeller.filter(p => p.sube === b.name).length;
-    if (count < 3) { // çok az varsa veya yoksa
-      b.init.forEach(p => {
-        if (!data.aylar[ay].personeller.find(x => x.ad === p.ad && x.sube === b.name)) {
-          data.aylar[ay].personeller.push({...p, sube: b.name, id: Date.now() + Math.random()});
-          added = true;
-        }
-      });
-    }
-  });
+  // Çengelköy'ü her zaman PDF'deki gibi güncelle
+  const others = data.aylar[ay].personeller.filter(p => p.sube !== 'Çengelköy');
+  const cengelList = cengelInit.map(p => ({...p, sube: 'Çengelköy', id: Date.now() + Math.random()}));
+  data.aylar[ay].personeller = [...others, ...cengelList];
+  added = true;
   if (added) save();
   updateSubeSelect();
   renderTable();
@@ -427,8 +417,30 @@ function load() {
 
 // Cadde güncel liste
 const cengelInit = [
-  "EMRE BULUT","MURAT GÜNEY","AHMET ÖZÇELİK","TOLGA BULUT","GÜLEN OTAÇ","VEYSEL YILMAZ","MUSTAFA YILDIRIM","BEYTULLAH ÖMER YAĞMUR","ŞEYMA KARA","KEMAL KÖRPE","BİLAL KAHVECİ","ALİ ÖMER YILMAZ","FATİH İPEK","İSMAİL ŞİMŞEK","TAHİR ŞAHBAZ","SEMİH DÜNDAR","ABDULSAMET YAPRAK","METİN BULUT","OSMAN KAPLAN","RAMAZAN KOÇAL","YAŞAR KEMAL HAN","UĞUR YILMAZ","NECMETTİN AKYILDIZ","AZİM RECEBİ","AZİMYAR SHAHABUDDİN"
-].map(ad => ({ad, maas:0, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0}));
+  {ad:"EMRE BULUT", maas:71500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"MURAT GÜNEY", maas:71500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"AHMET ÖZÇELİK", maas:85000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"TOLGA BULUT", maas:76000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"GÜLEN OTAÇ", maas:28075, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"VEYSEL YILMAZ", maas:66000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"MUSTAFA YILDIRIM", maas:63000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"BEYTULLAH ÖMER YAĞMUR", maas:66000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"ŞEYMA KARA", maas:63000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"KEMAL KÖRPE", maas:81000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"BİLAL KAHVECİ", maas:63000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"ALİ ÖMER YILMAZ", maas:63000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"FATİH İPEK", maas:66000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"İSMAİL ŞİMŞEK", maas:76000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"TAHİR ŞAHBAZ", maas:61000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"METİN BULUT", maas:56000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"OSMAN KAPLAN", maas:82000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"RAMAZAN KOÇAL", maas:76000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"YAŞAR KEMAL HAN", maas:84000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"UĞUR YILMAZ", maas:50000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"NECMETTİN AKYILDIZ", maas:52000, gun:0, avans:0, ceza:0, bes:-1631, haciz:0, borc:0},
+  {ad:"AZİM RECEBİ (SİGORTASIZ)", maas:61000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"AZİMYAR SHAHABUDDİN (SİGORTASIZ)", maas:50000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0}
+];
 
 const kadikoyInit = [
   "ÖZAY ALŞAN","ABDULKADİR AKYÜZ","MUHAMMED AKYÜZ","SEDAT KIZILKAYA","MAHMUT TEKER","İSRAFİL ÖZTÜRK","CAFER KOCA","İSA AKYILDIZ","MUHSİN IŞIK","RAMAZAN KURAL","RAMAZAN UZUNALP","GÜRKAN EYÜPOĞLU","VEDAT ÖZTÜRK","BİLAL DENERİ","VEPA","GÖKHAN YEŞİLBAŞ","EREN YILMAZ","İSMAİL ALBAYRAK","MURAT KAYA","MUHSİN ÖZMERT","EMİRHAN KANDEMİR","AZAT ASLANGRİ","RIZVAN FINDIK","K. ENDER KIZILKAYA","ERAY SOFUOĞLU","FURKAN ARDA","FERAT GÜNDÜZ","İBRAHİM KARAMAN","YİĞİT ASLANGRİ","TUNCAY ÇAĞLAYAN","ABDULSAMET SEYAR","BATUHAN SEYAR","ALİ BİNGÖL","ALTAN BULUT","YASİN TERCANL","İSMAİL YAZICI","EMİR ÇAPAR","OĞUZHAN ÇAVUSOĞLU","TAHSIN CERAN","MUHAMMED ONUR SAMUR","İSMAİL BURAK AKYOL"
