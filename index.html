@@ -616,13 +616,13 @@ function renderMobileCards() {
           <span class="hakedis">${format(c.hakedis)}</span>
         </div>
         <div class="card-body">
-          <div class="card-row"><label>Maaş</label><span>${format(p.maas)}</span></div>
-          <div class="card-row"><label>Gün Kesintisi</label><span>${format(c.dev)}</span></div>
-          <div class="card-row"><label>Avans</label><span>${format(p.avans)}</span></div>
-          <div class="card-row"><label>Ceza</label><span>${format(p.ceza)}</span></div>
-          <div class="card-row"><label>BES</label><span>${format(p.bes)}</span></div>
-          <div class="card-row"><label>Haciz</label><span>${format(p.haciz)}</span></div>
-          <div class="card-row"><label>Borç</label><span>${format(p.borc)}</span></div>
+          <div class="card-row"><label>Maaş</label><input type="number" value="${p.maas||0}" onblur="updateField('${p.id}','maas',+this.value); renderMobileCards()" style="width:100px;text-align:right;"></div>
+          <div class="card-row"><label>Gün</label><input type="number" value="${p.gun||0}" onblur="updateField('${p.id}','gun',+this.value); renderMobileCards()" style="width:80px;text-align:right;"></div>
+          <div class="card-row"><label>Avans</label><input type="number" value="${p.avans||0}" onblur="updateField('${p.id}','avans',+this.value); renderMobileCards()" style="width:100px;text-align:right;"></div>
+          <div class="card-row"><label>Ceza</label><input type="number" value="${p.ceza||0}" onblur="updateField('${p.id}','ceza',+this.value); renderMobileCards()" style="width:100px;text-align:right;"></div>
+          <div class="card-row"><label>BES</label><input type="number" value="${p.bes||0}" onblur="updateField('${p.id}','bes',+this.value); renderMobileCards()" style="width:100px;text-align:right;"></div>
+          <div class="card-row"><label>Haciz</label><input type="number" value="${p.haciz||0}" onblur="updateField('${p.id}','haciz',+this.value); renderMobileCards()" style="width:100px;text-align:right;"></div>
+          <div class="card-row"><label>Borç</label><input type="number" value="${p.borc||0}" onblur="updateField('${p.id}','borc',+this.value); renderMobileCards()" style="width:100px;text-align:right;"></div>
           <div class="card-row"><label>Toplam Kesinti</label><span>${format(c.toplam)}</span></div>
           <div class="card-row"><label><b>Hakediş</b></label><span><b>${format(c.hakedis)}</b></span></div>
           <div class="card-actions">
