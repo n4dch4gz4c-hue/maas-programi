@@ -515,7 +515,9 @@ function save() {
 
 function calc(p) {
   const dev = Math.round((p.maas || 0) / 30 * (p.gun || 0));
-  const toplam = dev + (p.avans||0) + (p.ceza||0) + (p.bes||0) + (p.haciz||0) + (p.borc||0);
+  // BES negatif gelirse de kesinti olarak işle
+  const besKesinti = Math.abs(p.bes || 0);
+  const toplam = dev + (p.avans||0) + (p.ceza||0) + besKesinti + (p.haciz||0) + (p.borc||0);
   const hakedis = (p.maas || 0) - toplam;
   return {dev, toplam, hakedis};
 }
