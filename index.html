@@ -873,7 +873,8 @@ function syncDevamsizlik() {
 
       let toplamGun = 0;
       devamlar.forEach(d => {
-        if (normalize(d.kisi) === norm || isSimilar(d.kisi, p.ad)) {
+        const dk = normalize(d.kisi);
+        if (dk === norm) {
           toplamGun += Number(d.gun) || 0;
         }
       });
@@ -908,7 +909,8 @@ function syncCeza() {
 
       let toplamCeza = 0;
       cezalar.forEach(c => {
-        if (normalize(c.kisi) === norm || isSimilar(c.kisi, p.ad)) {
+        const ck = normalize(c.kisi);
+        if (ck === norm) {
           toplamCeza += Number(c.tutar) || 0;
         }
       });
