@@ -741,30 +741,31 @@ function showModalListe(title, list, columns) {
 
   const overlay = document.createElement("div");
   overlay.id = "listeModal";
-  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:10px;";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:8px;";
 
   let rows = "";
   list.forEach((p, i) => {
-    rows += `<tr>
-      <td style="text-align:center;font-weight:600;color:#1F4E79;width:36px;padding:7px 4px;border-bottom:1px solid #eee;">${i+1}</td>
-      <td style="text-align:left;font-weight:600;padding:7px 8px;border-bottom:1px solid #eee;">${p.ad || "-"}</td>
-      ${columns.map(col => `<td style="text-align:right;white-space:nowrap;padding:7px 8px;border-bottom:1px solid #eee;">${col.value(p, i)}</td>`).join("")}
+    const bg = i % 2 === 0 ? "#f8fbff" : "#ffffff";
+    rows += `<tr style="background:${bg};">
+      <td style="text-align:center;font-weight:700;color:#1F4E79;width:28px;padding:4px 2px;font-size:11px;border-bottom:1px solid #e5e7eb;">${i+1}</td>
+      <td style="text-align:left;font-weight:600;padding:4px 6px;font-size:11px;border-bottom:1px solid #e5e7eb;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.ad || "-"}</td>
+      ${columns.map(col => `<td style="text-align:right;white-space:nowrap;padding:4px 6px;font-size:11px;border-bottom:1px solid #e5e7eb;color:#374151;">${col.value(p, i)}</td>`).join("")}
     </tr>`;
   });
 
-  const headers = `<th style="width:36px;padding:8px 4px;">#</th><th style="text-align:left;padding:8px 8px;">Ad Soyad</th>` +
-    columns.map(col => `<th style="text-align:right;padding:8px 8px;">${col.label}</th>`).join("");
+  const headers = `<th style="width:28px;padding:6px 2px;font-size:11px;">#</th><th style="text-align:left;padding:6px 6px;font-size:11px;">Ad Soyad</th>` +
+    columns.map(col => `<th style="text-align:right;padding:6px 6px;font-size:11px;">${col.label}</th>`).join("");
 
   overlay.innerHTML = `
-    <div style="background:#fff;border-radius:12px;width:100%;max-width:440px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 30px rgba(0,0,0,.3);">
-      <div style="padding:10px 12px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
-        <h3 style="margin:0;color:#1F4E79;font-size:14px;">${title} (${list.length})</h3>
-        <button onclick="document.getElementById('listeModal').remove()" style="background:#e74c3c;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer;font-size:13px;">Kapat</button>
+    <div style="background:#fff;border-radius:14px;width:100%;max-width:420px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.25);">
+      <div style="padding:10px 12px;background:linear-gradient(135deg,#1F4E79,#2a6cb0);color:#fff;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+        <h3 style="margin:0;font-size:14px;font-weight:700;">${title} (${list.length})</h3>
+        <button onclick="document.getElementById('listeModal').remove()" style="background:#ef4444;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-weight:700;cursor:pointer;font-size:12px;">Kapat</button>
       </div>
       <div style="flex:1;overflow:auto;">
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <table style="width:100%;border-collapse:collapse;">
           <thead>
-            <tr style="background:#1F4E79;color:#fff;position:sticky;top:0;font-weight:600;">
+            <tr style="background:#1e3a5f;color:#fff;position:sticky;top:0;font-weight:600;">
               ${headers}
             </tr>
           </thead>
@@ -779,7 +780,6 @@ function showModalListe(title, list, columns) {
   document.body.appendChild(overlay);
   overlay.addEventListener("click", e => { if (e.target === overlay) overlay.remove(); });
 }
-
 function updateField(id, field, value) {
   const ay = getCurrentMonth();
   if (!data.aylar[ay]) return;
