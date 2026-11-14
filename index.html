@@ -747,21 +747,21 @@ function showModalListe(title, list, columns) {
   list.forEach((p, i) => {
     rows += "<tr>";
     columns.forEach(col => {
-      rows += "<td style='padding:6px 8px;border-bottom:1px solid #eee;text-align:left;font-size:13px;'>" + col.value(p, i) + "</td>";
+      rows += "<td style='padding:4px 6px;border-bottom:1px solid #eee;text-align:left;font-size:12px;'>" + col.value(p, i) + "</td>";
     });
     rows += "</tr>";
   });
 
-  const headers = columns.map(c => "<th style='padding:8px;background:#1F4E79;color:#fff;text-align:left;font-size:12px;white-space:nowrap;'>" + c.label + "</th>").join("");
+  const headers = columns.map(c => "<th style='padding:6px;background:#1F4E79;color:#fff;text-align:left;font-size:11px;white-space:nowrap;'>" + c.label + "</th>").join("");
 
   overlay.innerHTML = `
-    <div style="background:#fff;border-radius:12px;width:100%;max-width:480px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 30px rgba(0,0,0,.3);">
-      <div style="padding:12px 14px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
-        <h3 style="margin:0;color:#1F4E79;font-size:15px;">${title} (${list.length})</h3>
-        <button onclick="document.getElementById('listeModal').remove()" style="background:#e74c3c;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer;font-size:13px;">Kapat</button>
+    <div style="background:#fff;border-radius:10px;width:100%;max-width:420px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 6px 24px rgba(0,0,0,.3);">
+      <div style="padding:10px 12px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+        <h3 style="margin:0;color:#1F4E79;font-size:14px;">${title} (${list.length})</h3>
+        <button onclick="document.getElementById('listeModal').remove()" style="background:#e74c3c;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-weight:700;cursor:pointer;font-size:12px;">Kapat</button>
       </div>
-      <div style="flex:1;overflow:auto;padding:8px;">
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <div style="flex:1;overflow:auto;padding:4px 6px;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
           <thead><tr>${headers}</tr></thead>
           <tbody>${rows}</tbody>
         </table>
