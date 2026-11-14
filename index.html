@@ -742,15 +742,15 @@ function showModalListe(title, list, columns) {
   let items = "";
   list.forEach((p, i) => {
     let details = columns.map(col => col.value(p, i)).join("  •  ");
-    items += `<div style="padding:8px 0;border-bottom:1px solid #eee;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+    items += `<div style="padding:6px 0;border-bottom:1px solid #eee;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
       <strong>${i+1}. ${p.ad || "-"}</strong>  <span style="color:#555;">${details}</span>
     </div>`;
   });
 
   overlay.innerHTML = `
-    <div style="background:#fff;border-radius:12px;width:100%;max-width:460px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 30px rgba(0,0,0,.3);">
-      <div style="padding:12px 14px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
-        <h3 style="margin:0;color:#1F4E79;font-size:15px;">${title} (${list.length})</h3>
+    <div style="background:#fff;border-radius:12px;width:100%;max-width:380px;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 30px rgba(0,0,0,.3);">
+      <div style="padding:10px 12px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+        <h3 style="margin:0;color:#1F4E79;font-size:14px;">${title} (${list.length})</h3>
         <button onclick="document.getElementById('listeModal').remove()" style="background:#e74c3c;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer;font-size:13px;">Kapat</button>
       </div>
       <div style="flex:1;overflow:auto;padding:8px 14px;">
