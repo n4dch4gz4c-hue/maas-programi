@@ -707,8 +707,6 @@ function listeleAvans() {
   let list = filter ? personeller.filter(p => p.sube === filter) : [...personeller];
   list = list.filter(p => (p.avans || 0) > 0);
   showModalListe("Avans Alanlar", list, [
-    {label: "Sıra", value: (p, i) => i + 1},
-    {label: "Ad Soyad", value: p => p.ad || "-"},
     {label: "Avans", value: p => format(p.avans || 0)}
   ]);
 }
@@ -723,9 +721,7 @@ function listeleDevamsizlik() {
     return (c.dev || 0) > 0;
   });
   showModalListe("Devamsızlığı Olanlar", list, [
-    {label: "Sıra", value: (p, i) => i + 1},
-    {label: "Ad Soyad", value: p => p.ad || "-"},
-    {label: "Gün", value: p => (p.gun || 0)},
+    {label: "Gün", value: p => (p.gun || 0) + " gün"},
     {label: "Ücret", value: p => format(calc(p).dev)}
   ]);
 }
@@ -741,30 +737,24 @@ function showModalListe(title, list, columns) {
 
   const overlay = document.createElement("div");
   overlay.id = "listeModal";
-  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:8px;";
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:10px;";
 
-  let rows = "";
+  let items = "";
   list.forEach((p, i) => {
-    rows += "<tr>";
-    columns.forEach(col => {
-      rows += "<td style='padding:4px 6px;border-bottom:1px solid #eee;text-align:left;font-size:12px;'>" + col.value(p, i) + "</td>";
-    });
-    rows += "</tr>";
+    let details = columns.map(col => col.value(p, i)).join("  •  ");
+    items += `<div style="padding:8px 0;border-bottom:1px solid #eee;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+      <strong>${i+1}. ${p.ad || "-"}</strong>  <span style="color:#555;">${details}</span>
+    </div>`;
   });
 
-  const headers = columns.map(c => "<th style='padding:6px;background:#1F4E79;color:#fff;text-align:left;font-size:11px;white-space:nowrap;'>" + c.label + "</th>").join("");
-
   overlay.innerHTML = `
-    <div style="background:#fff;border-radius:10px;width:100%;max-width:420px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 6px 24px rgba(0,0,0,.3);">
-      <div style="padding:10px 12px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
-        <h3 style="margin:0;color:#1F4E79;font-size:14px;">${title} (${list.length})</h3>
-        <button onclick="document.getElementById('listeModal').remove()" style="background:#e74c3c;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-weight:700;cursor:pointer;font-size:12px;">Kapat</button>
+    <div style="background:#fff;border-radius:12px;width:100%;max-width:460px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 30px rgba(0,0,0,.3);">
+      <div style="padding:12px 14px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+        <h3 style="margin:0;color:#1F4E79;font-size:15px;">${title} (${list.length})</h3>
+        <button onclick="document.getElementById('listeModal').remove()" style="background:#e74c3c;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-weight:700;cursor:pointer;font-size:13px;">Kapat</button>
       </div>
-      <div style="flex:1;overflow:auto;padding:4px 6px;">
-        <table style="width:100%;border-collapse:collapse;font-size:12px;">
-          <thead><tr>${headers}</tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
+      <div style="flex:1;overflow:auto;padding:8px 14px;">
+        ${items}
       </div>
     </div>
   `;
