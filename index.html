@@ -1,1 +1,484 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Maaş Programı v1</title>
+<style>
+:root {
+  --primary: #1F4E79;
+  --secondary: #C65911;
+  --bg: #f0f2f5;
+  --card: #ffffff;
+  --input: #fffbf0;
+  --formula: #e8f5e9;
+  --border: #e0e0e0;
+  --text: #2c3e50;
+  --hover: #f8f9fa;
+}
+* { box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, #f0f2f5 0%, #e8eef5 100%);
+  margin: 0;
+  padding: 16px;
+  color: var(--text);
+  min-height: 100vh;
+}
+.header {
+  background: linear-gradient(135deg, var(--primary) 0%, #2a6cb0 100%);
+  color: white;
+  padding: 24px 32px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(31,78,121,0.15);
+}
+.header h1 { margin: 0; font-size: 26px; font-weight: 700; }
+.header p { margin: 6px 0 0; opacity: 0.9; font-size: 14px; }
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  align-items: center;
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+select, input, button {
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(31,78,121,0.2);
+}
+button:hover { background: #163a5f; transform: translateY(-1px); }
+button.secondary { background: var(--secondary); box-shadow: 0 2px 8px rgba(198,89,17,0.2); }
+button.secondary:hover { background: #a84a0e; }
+button.danger { background: #e74c3c; }
+button.danger:hover { background: #c0392b; }
+.card {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+th {
+  background: var(--primary);
+  color: white;
+  padding: 14px 8px;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  font-weight: 600;
+}
+td {
+  padding: 10px 6px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+  transition: background 0.15s;
+}
+tr:hover td { background: var(--hover); }
+td.name { text-align: left; font-weight: 500; min-width: 150px; max-width: 180px; }
+td.name input { font-size: 12px; width: 100%; }
+input[type="number"], input[type="text"] {
+  width: 100%;
+  border: 1px solid #ddd;
+  padding: 8px;
+  border-radius: 6px;
+  background: var(--input);
+  text-align: center;
+  font-size: 12px;
+}
+input.formula {
+  background: var(--formula);
+  border: none;
+  font-weight: 600;
+  color: #1a5f2a;
+}
+.totals {
+  background: #1F4E79 !important;
+  color: white;
+  font-weight: bold;
+}
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.summary-card {
+  background: white;
+  padding: 22px;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  border-left: 6px solid var(--secondary);
+  transition: transform 0.2s;
+}
+.summary-card:hover { transform: translateY(-2px); }
+.summary-card h3 { margin: 0 0 10px; font-size: 16px; color: var(--primary); }
+.summary-card .value { font-size: 26px; font-weight: 700; color: var(--secondary); }
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  background: white;
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  width: fit-content;
+}
+.tabs button {
+  background: transparent;
+  color: var(--primary);
+  border: 2px solid transparent;
+  box-shadow: none;
+}
+.tabs button.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+.footer-note {
+  text-align: center;
+  color: #7f8c8d;
+  font-size: 12px;
+  margin-top: 30px;
+  padding: 10px;
+}
+.search-box {
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  min-width: 200px;
+  background: white;
+}
+@media (max-width: 768px) {
+  body { padding: 8px; }
+  .header { flex-direction: column; text-align: center; gap: 10px; padding: 16px; }
+  .controls { flex-direction: column; align-items: stretch; gap: 8px; }
+  .card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { font-size: 11px; min-width: 900px; }
+  th, td { padding: 8px 5px; white-space: nowrap; }
+  #bordroTable { min-width: 1100px; }
+  input[type="number"], input[type="text"] { font-size: 11px; padding: 6px 4px; }
+  .summary-grid { grid-template-columns: 1fr; }
+}
+
+/* Sütun genişlikleri - isim geniş, diğerleri eşit */
+#bordroTable { table-layout: fixed; width: 100%; }
+#bordroTable th, #bordroTable td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#bordroTable th:nth-child(1), #bordroTable td:nth-child(1) { width: 5%; }
+#bordroTable th:nth-child(2), #bordroTable td:nth-child(2) { width: 18%; }
+#bordroTable th:nth-child(n+3), #bordroTable td:nth-child(n+3) { width: 7.7%; }
+#bordroTable input { width: 100%; box-sizing: border-box; max-width: 100%; }
+
+
+/* Mobil Kart Görünümü */
+@media (max-width: 768px) {
+  .controls, #filterSube, #searchName { display: flex !important; visibility: visible !important; }
+  .desktop-table { display: none; }
+  .mobile-cards { display: block !important; }
+  .person-card {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    background: #f8f9fa;
+    font-weight: 600;
+  }
+  .card-header .name { font-size: 15px; }
+  .card-header .hakedis { color: #1F4E79; font-weight: 700; }
+  .card-body {
+    display: none;
+    padding: 12px 16px;
+    border-top: 1px solid #eee;
+  }
+  .card-body.open { display: block; }
+  .card-row { display: flex; justify-content: space-between; margin: 6px 0; font-size: 14px; }
+  .card-row label { color: #666; }
+  .card-actions { margin-top: 10px; display: flex; gap: 8px; }
+}
+@media (min-width: 769px) {
+  .mobile-cards { display: none; }
+}
+
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Maaş Programı</h1>
+    <p></p>
+  </div>
+  <div style="display:flex; gap:8px;">
+    <button onclick="exportData()">PDF İndir</button>
+    <button onclick="forceReload()" style="background:#0ea5e9;">Yenile</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="active" onclick="showTab('bordro')">Bordro</button>
+  <button onclick="showTab('ozet')">Özet</button>
+  <button onclick="showTab('arsiv')">Arşiv</button>
+</div>
+
+<!-- BORDRO -->
+<div id="tab-bordro">
+  <div class="controls">
+    <label style="display:none;">Ay:</label>
+    <select id="filterAy" onchange="loadMonth()" style="display:none;">
+      <option value="2026-10">Ekim 2026</option>
+      <option value="2026-09">Eylül 2026</option>
+      <option value="2026-08">Ağustos 2026</option>
+      <option value="2026-07">Temmuz 2026</option>
+    </select>
+    <select id="filterSube" onchange="renderTable()">
+      <option value="">Tüm Şubeler</option>
+    </select>
+    <input type="text" id="searchName" class="search-box" placeholder="İsim ara..." onkeypress="if(event.key==='Enter') renderTable()">
+    <button onclick="renderTable()" class="secondary">Ara</button>
+    <button onclick="addPerson()">+ Personel Ekle</button>
+    <input type="file" id="importFile" accept=".xlsx,.xls,.csv,.pdf" style="display:none;" onchange="importPeople(this)">
+    <button onclick="document.getElementById('importFile').click()" class="secondary">📄 Excel/PDF</button>
+    <button onclick="syncDevamsizlik()" class="secondary">Devamsızlık Çek</button>
+    <button onclick="syncCeza()" class="secondary">Ceza Çek</button>
+    <button onclick="listeleAvans()" class="secondary" style="background:#f59e0b;">Avans Listele</button>
+    <button onclick="listeleDevamsizlik()" class="secondary" style="background:#ef4444;">Devamsızlık Listele</button>
+    <button onclick="arsivle()" class="secondary">Arşivle</button>
+    <button onclick="showTab('arsiv')" class="secondary">Arşiv</button>
+    <span id="personCount" style="margin-left:auto; font-weight:600;"></span>
+  </div>
+
+  <div class="card" style="overflow-x:auto;">
+    <div id="mobileCards" class="mobile-cards"></div>
+<table id="bordroTable" class="desktop-table">
+      <thead>
+        <tr>
+          <th>SIRA</th>
+          <th>AD SOYAD</th>
+          <th>MAAŞ</th>
+          <th>GÜN</th>
+          <th>DEVAMSIZLIK</th>
+          <th>AVANS</th>
+          <th>CEZA</th>
+          <th>BES</th>
+          <th>HACİZ</th>
+          <th>BORÇ</th>
+          <th>TOPLAM KESİNTİ</th>
+          <th>HAKEDİŞ</th>
+          <th>TAŞIMA / SİL</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+      <tfoot>
+        <tr class="totals" id="totalRow"></tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+<!-- ÖZET -->
+<div id="tab-ozet" style="display:none;">
+  <div class="summary-grid" id="summaryGrid"></div>
+
+  <div class="card" style="padding:20px; margin-top:20px;">
+    <h3 style="margin-top:0;">Yıllık Görünüm</h3>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; align-items:center;">
+      <select id="yearlySube" onchange="renderYearly()" style="min-width:160px;">
+        <option value="">Şube seç</option>
+      </select>
+      <select id="yearlyYear" onchange="renderYearly()" style="min-width:100px;">
+        <option value="2026">2026</option>
+        <option value="2027">2027</option>
+      </select>
+    </div>
+    <div id="yearlySummary" style="font-weight:600; margin-bottom:12px;"></div>
+    <canvas id="yearlyChart" height="120"></canvas>
+    <div id="yearlyTable" style="margin-top:16px; overflow-x:auto;"></div>
+  </div>
+</div>
+
+<!-- ARŞİV -->
+<div id="tab-arsiv" style="display:none;">
+  <div class="card" style="padding:20px;">
+    <h3>Arşivlenmiş Aylar</h3>
+    <div id="arsivList"></div>
+  </div>
+</div>
+<div id="tab-subeler" style="display:none;">
+  <div class="card" style="padding:20px;">
+    <h3>Şube Listesi</h3>
+    <p>Yeni şube eklemek için aşağıdaki alana yazıp Enter'a basın.</p>
+    <input type="text" id="newSubeInput" placeholder="Yeni şube adı..." style="width:300px;" onkeypress="if(event.key==='Enter') addSube()">
+    <button onclick="addSube()">Ekle</button>
+    <ul id="subeList" style="margin-top:16px; line-height:2;"></ul>
+  </div>
+</div>
+
+
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBHgiy7cM5TRYz2zuwY6CeFJwrqsVCaZjk",
+  authDomain: "cadde-mesai.firebaseapp.com",
+  databaseURL: "https://cadde-mesai-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "cadde-mesai",
+  storageBucket: "cadde-mesai.appspot.com"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const STORAGE_KEY = 'cadde_maas_v2';
+
+let data = {
+  subeler: ['Cadde', 'Kadıköy', 'Çengelöy', 'Taksim Pide', 'Taksim Büfe'],
+  aylar: {}
+};
+
+function getCurrentMonth() {
+  // Düzenleme her zaman "current" üzerinde çalışır
+  return "current";
+}
+
+function loadMonth() {
+  const ay = getCurrentMonth();
+  if (!data.aylar) data.aylar = {};
+  if (!data.aylar.current) data.aylar.current = { personeller: [] };
+  if (!data.aylar.current.personeller) data.aylar.current.personeller = [];
+
+  // Maaş yoksa arşivden geri yükle (sadece bir kere, save yok)
+  const hasSalary = data.aylar.current.personeller.some(p => (p.maas||0) > 0);
+  if (!hasSalary && data.arsivler && data.arsivler["Ekim 2026"] && data.arsivler["Ekim 2026"].personeller) {
+    data.aylar.current.personeller = JSON.parse(JSON.stringify(data.arsivler["Ekim 2026"].personeller));
+    console.log("Arşivden maaşlı veri geri yüklendi");
+  }
+
+  // Yanlış şubeyi temizle
+  if (data.subeler) {
+    data.subeler = data.subeler.filter(s => s !== "Çengelöy");
+    if (!data.subeler.includes("Çengelöy")) data.subeler.push("Çengelöy");
+  }
+
+  // Yeni şubeleri ekle (sadece eksikse)
+  const required = ['Cadde', 'Kadıköy', 'Çengelöy', 'Taksim Pide', 'Taksim Büfe'];
+  required.forEach(s => {
+    if (!data.subeler.includes(s)) data.subeler.push(s);
+  });
+
+  updateSubeSelect();
+  renderTable();
+  renderSubeList();
+}
+
+let isInitialLoad = true;
+let ignoreNextRealtime = false;
+
+function load() {
+  db.ref("maas").on("value", snap => {
+    const fbData = snap.val();
+    if (fbData && fbData.aylar) {
+      const ay = getCurrentMonth();
+      const remoteCount = fbData.aylar[ay]?.personeller?.length || 0;
+      const localCount = data.aylar[ay]?.personeller?.length || 0;
+      // Sadece başlangıçta veya remote daha fazla veri varsa al (kaybolmayı önle)
+      if (isInitialLoad || remoteCount > 0) {
+        data = fbData;
+        console.log("Firebase anlık güncellendi, kişi sayısı:", remoteCount);
+      } else {
+        console.log("Yerel veri korundu");
+      }
+    } else if (isInitialLoad) {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        data = JSON.parse(saved);
+        console.log("localStorage'dan yüklendi");
+      }
+    }
+    isInitialLoad = false;
+    if (ignoreNextRealtime) {
+      ignoreNextRealtime = false;
+      return; // kendi kaydettiğimiz değişikliği yoksay
+    }
+    loadMonth(); // personelleri kontrol et ve eksikse ekle
+    updateSubeSelect();
+    renderTable();
+    renderSubeList();
+    console.log("Tablo render edildi, toplam kişi:", data.aylar?.current?.personeller?.length || 0);
+  }, err => {
+    console.error("Firebase dinleme hatası:", err);
+    if (isInitialLoad) {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) data = JSON.parse(saved);
+      loadMonth();
+    }
+  });
+}
+
+// Cadde güncel liste
+const cengelInit = [
+  {ad:"EMRE BULUT", maas:71500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"MURAT GÜNEY", maas:71500, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"AHMET ÖZÇELİK", maas:85000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"TOLGA BULUT", maas:76000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"GÜLEN OTAÇ", maas:28075, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"VEYSEL YILMAZ", maas:66000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"MUSTAFA YILDIRIM", maas:63000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"BEYTULLAH ÖMER YAĞMUR", maas:66000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"ŞEYMA KARA", maas:63000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"KEMAL KÖRPE", maas:81000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"BİLAL KAHVECİ", maas:63000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"ALİ ÖMER YILMAZ", maas:63000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"FATİH İPEK", maas:66000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"İSMAİL ŞİMŞEK", maas:76000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"TAHİR ŞAHBAZ", maas:61000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"METİN BULUT", maas:56000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"OSMAN KAPLAN", maas:82000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"RAMAZAN KOÇAL", maas:76000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"YAŞAR KEMAL HAN", maas:84000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"UĞUR YILMAZ", maas:50000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"NECMETTİN AKYILDIZ", maas:52000, gun:0, avans:0, ceza:0, bes:-1631, haciz:0, borc:0},
+  {ad:"AZİM RECEBİ (SİGORTASIZ)", maas:61000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0},
+  {ad:"AZİMYAR SHAHABUDDİN (SİGORTASIZ)", maas:50000, gun:0, avans:0, ceza:0, bes:0, haciz:0, borc:0}
+];
+
+const kadikoyInit = [
+  "ÖZAY ALŞAN","ABDULKADİR AKYÜZ","MUHAMMED AKYÜZ","SEDAT KIZILKAYA","MAHMUT TEKER","İSRAFİL ÖZTÜRK","CAFER KOCA","İSA AKYILDIZ","MUHSİN IŞIK","RAMAZAN KURAL","RAMAZAN UZUNALP","GÜRKAN EYÜPOĞLU","VEDAT ÖZTÜRK","BİLAL DENERİ","VEPA","GÖKHAN YEŞİLBAŞ","EREN YILMAZ","İSMAİL ALBAYRAK","MURAT KAYA","MUHSİN ÖZMERT","EMİRHAN KANDEMİR","AZAT ASLANGRİ","RIZVAN FINDIK","K. ENDER KIZILKAYA","ERAY SOFUOĞLU","FURKAN ARDA","FERAT GÜNDÜZ","İBRAHİM KARAMAN","YİĞİT ASLANGRİ","TUNCAY ÇAĞLAYAN","ABDULSAMET SEYAR","BATUHAN SEYAR","ALİ BİNGÖL","ALTAN BULUT","YASİN TERCANL","İSMAİL YAZICI","EMİR ÇAPAR","OĞUZHAN Ç[+truncated for tool limit - full content would be here in real call]
