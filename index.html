@@ -196,34 +196,24 @@ input.formula {
 #bordroTable input { width: 100%; box-sizing: border-box; max-width: 100%; }
 
 
-/* Avans / Devamsızlık liste modalı - mobil/PC dengesi */
+/* Avans / Devamsızlık liste modalı */
 @media (max-width: 768px) {
   #listeModal .liste-modal-box {
-    max-width: 94vw !important;
-    max-height: 72vh !important;
-    border-radius: 10px !important;
+    max-width: 96vw !important;
+    max-height: 78vh !important;
   }
-  #listeModal h3 { font-size: 13px !important; }
-  #listeModal table { 
-    font-size: 11px !important; 
-    width: 100% !important;
-    table-layout: fixed !important;
-  }
-  #listeModal th, #listeModal td { 
-    padding: 4px 3px !important; 
-    font-size: 11px !important; 
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-  }
-  #listeModal div { overflow-x: hidden !important; }
+  #listeModal .liste-desktop-table { display: none !important; }
+  #listeModal .liste-mobile-list { display: block !important; }
 }
 @media (min-width: 769px) {
   #listeModal .liste-modal-box {
-    max-width: 520px !important;
-    max-height: 78vh !important;
+    max-width: 780px !important;
+    width: 70vw !important;
+    max-height: 82vh !important;
   }
-  #listeModal h3 { font-size: 15px !important; }
-  #listeModal th, #listeModal td { font-size: 13px !important; padding: 8px 8px !important; }
+  #listeModal .liste-desktop-table { display: table !important; }
+  #listeModal .liste-mobile-list { display: none !important; }
+  #listeModal th, #listeModal td { font-size: 14px !important; padding: 10px 8px !important; }
 }
 @media (max-width: 768px) {
   .controls, #filterSube, #searchName { display: flex !important; visibility: visible !important; }
@@ -771,41 +761,59 @@ function showModalListe(title, list, columns) {
   overlay.id = "listeModal";
   overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:10px;";
 
-  const colCount = columns.length;
-  // Mobilde daha sıkı sütunlar
-  const nameWidth = colCount === 1 ? "52%" : "44%";
-  const otherWidth = colCount === 1 ? "30%" : "20%";
+  let tableRows = "";
+  let mobileRows = "";
 
-  let rows = "";
   list.forEach((p, i) => {
     const bg = i % 2 === 0 ? "#f8fbff" : "#ffffff";
-    rows += `<tr style="background:${bg};">
-      <td style="text-align:center;font-weight:700;color:#1F4E79;width:8%;padding:5px 2px;font-size:11px;border-bottom:1px solid #e5e7eb;">${i+1}</td>
-      <td style="text-align:left;font-weight:600;padding:5px 4px;font-size:11px;border-bottom:1px solid #e5e7eb;width:${nameWidth};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.ad || "-"}</td>
-      ${columns.map(col => `<td style="text-align:right;white-space:nowrap;padding:5px 4px;font-size:11px;border-bottom:1px solid #e5e7eb;color:#374151;width:${otherWidth};">${col.value(p, i)}</td>`).join("")}
+    const name = p.ad || "-";
+
+    tableRows += `<tr style="background:${bg};">
+      <td style="text-align:center;font-weight:700;color:#1F4E79;width:40px;padding:8px 4px;">${i+1}</td>
+      <td style="text-align:left;font-weight:600;padding:8px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</td>
+      ${columns.map(col => `<td style="text-align:right;white-space:nowrap;padding:8px 8px;color:#374151;">${col.value(p, i)}</td>`).join("")}
     </tr>`;
+
+    const valuesHtml = columns.map(col => `
+      <div style="display:flex;flex-direction:column;align-items:flex-end;min-width:68px;">
+        <span style="font-size:10px;color:#6b7280;font-weight:500;">${col.label}</span>
+        <span style="font-size:13px;font-weight:700;color:#1F4E79;">${col.value(p, i)}</span>
+      </div>
+    `).join("");
+
+    mobileRows += `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:${bg};border-bottom:1px solid #e5e7eb;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
+          <span style="font-weight:700;color:#1F4E79;font-size:12px;width:22px;flex-shrink:0;">${i+1}</span>
+          <span style="font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span>
+        </div>
+        <div style="display:flex;gap:10px;flex-shrink:0;">
+          ${valuesHtml}
+        </div>
+      </div>`;
   });
 
-  const headers = `<th style="width:8%;padding:6px 2px;font-size:11px;">#</th><th style="text-align:left;padding:6px 4px;font-size:11px;width:${nameWidth};">Ad Soyad</th>` +
-    columns.map(col => `<th style="text-align:right;padding:6px 4px;font-size:11px;width:${otherWidth};">${col.label}</th>`).join("");
+  const tableHeaders = `<th style="width:40px;padding:8px 4px;">#</th><th style="text-align:left;padding:8px 8px;">Ad Soyad</th>` +
+    columns.map(col => `<th style="text-align:right;padding:8px 8px;">${col.label}</th>`).join("");
 
   overlay.innerHTML = `
-    <div class="liste-modal-box" style="background:#fff;border-radius:12px;width:100%;max-width:420px;max-height:75vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.25);">
+    <div class="liste-modal-box" style="background:#fff;border-radius:12px;width:100%;max-width:780px;max-height:82vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.25);">
       <div style="padding:10px 12px;background:linear-gradient(135deg,#1F4E79,#2a6cb0);color:#fff;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
-        <h3 style="margin:0;font-size:14px;font-weight:700;">${title} (${list.length})</h3>
+        <h3 style="margin:0;font-size:15px;font-weight:700;">${title} (${list.length})</h3>
         <button onclick="document.getElementById('listeModal').remove()" style="background:#ef4444;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-weight:700;cursor:pointer;font-size:12px;">Kapat</button>
       </div>
       <div style="flex:1;overflow-y:auto;overflow-x:hidden;">
-        <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+        <table class="liste-desktop-table" style="width:100%;border-collapse:collapse;">
           <thead>
             <tr style="background:#1e3a5f;color:#fff;font-weight:600;position:sticky;top:0;">
-              ${headers}
+              ${tableHeaders}
             </tr>
           </thead>
-          <tbody>
-            ${rows}
-          </tbody>
+          <tbody>${tableRows}</tbody>
         </table>
+        <div class="liste-mobile-list" style="display:none;">
+          ${mobileRows}
+        </div>
       </div>
     </div>
   `;
